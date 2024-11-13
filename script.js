@@ -1,73 +1,130 @@
-import openai
-from playsound import playsound
+let recognition;
+let statementStartTime, statementEndTime;
+const statusText = document.getElementById('status');
 
-# Set your OpenAI API key here
-openai.api_key = 'your_openai_api_key'
+// Load audio files
+const audios = {
+    greeting: new Audio('coo-greeting.mp3'),
+    motherly: new Audio('motherly-nuturing.mp3'),
+    aggressive: new Audio('aggressive-territorial.mp3'),
+    defensive: new Audio('defensive.mp3'),
+    flirtatious: new Audio('flirtatious.mp3'),
+    danger: new Audio('potential-danger.mp3'),
+    terrified: new Audio('terrified-petrified-grunts.mp3'),
+    territorial: new Audio('territorial-soft.mp3')
+};
 
-# Define the paths to your audio files
-audio_files = {
-    "greeting": "coo-greeting.mp3",
-    "aggressive": "aggressive-territorial.mp3",
-    "defensive": "defensive.mp3",
-    "flirtatious": "flirtatious.mp3",
-    "motherly": "motherly-nuturing.mp3",
-    "danger": "potential-danger.mp3",
-    "terrified": "terrified-petrified-grunts.mp3",
-    "territorial_soft": "territorial-soft.mp3"
+// Initialize speech recognition
+function initSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        alert("Please use Google Chrome for this feature.");
+        return;
+    }
+
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+        statusText.textContent = "Listening...";
+        statusText.classList.add('listening');
+        statementStartTime = new Date().getTime();
+    };
+
+    recognition.onresult = (event) => {
+        statementEndTime = new Date().getTime();
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const confidence = event.results[0][0].confidence;
+        const transcriptLength = transcript.trim().length;
+
+        if (confidence > 0.6 && transcriptLength > 5) {
+            const duration = (statementEndTime - statementStartTime) / 1000;
+            categorizeAndRespond(transcript, duration);
+        } else {
+            // Always play a sound response
+            playAudioForDuration(audios.greeting, 2);
+        }
+    };
+
+    recognition.onspeechend = () => {
+        recognition.stop();
+        statusText.textContent = "Not Listening";
+        statusText.classList.remove('listening');
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+    };
+
+    recognition.onend = () => {
+        console.log("Recognition ended.");
+    };
 }
 
-# Function to play the corresponding audio file
-def play_audio(file_key):
-    try:
-        playsound(audio_files[file_key])
-    except Exception as e:
-        print(f"Error playing audio: {e}")
+// Comprehensive keyword list for each category
+const keywords = {
+    motherly: [
+        "calm", "love", "support", "hug", "I love you", "marry me", "chosen family", "love of my life", 
+        "you mean the world", "pets", "mother", "father", "siblings", "doggo", "home", "meadow", "nature"
+    ],
+    aggressive: [
+        "tear", "destroy", "rage", "cancel", "hate", "fuck no", "disgust me", "burn it down", "violence", 
+        "fight", "dominance", "pissed", "annoying", "triggered", "angry", "furious"
+    ],
+    defensive: [
+        "me", "myself", "stop", "scared", "why is this happening", "leave me alone", 
+        "I didn’t mean it", "overwhelmed", "lost", "not good enough", "hurt"
+    ],
+    flirtatious: [
+        "cute", "fun", "flirt", "crush", "lesbian", "hot", "sexy", "stunning", "gorgeous", 
+        "sweetie", "darling", "kiss", "horny", "wink", "femme"
+    ],
+    danger: [
+        "danger", "alert", "red flag", "run", "be careful", "suspicious", "creepy", 
+        "get out", "evacuate", "trap", "beware", "caution", "brace yourself"
+    ],
+    terrified: [
+        "freaking out", "shaking", "scared", "panic", "help me", "dread", "I can’t breathe", 
+        "nightmare", "heart racing", "crying", "paralyzed", "hyperventilating"
+    ]
+};
 
-# Function to categorize user input and play corresponding audio
-def categorize_and_play(user_input):
-    # Lowercase the input for easier matching
-    text = user_input.lower()
-    
-    # Determine which category the input falls into
-    if any(greet in text for greet in ["hi", "hello", "hey", "greetings"]):
-        play_audio("greeting")
-    elif "angry" in text or "furious" in text or "rage" in text:
-        play_audio("aggressive")
-    elif "defensive" in text or "insecure" in text or "small" in text:
-        play_audio("defensive")
-    elif "flirt" in text or "sexy" in text or "beautiful" in text:
-        play_audio("flirtatious")
-    elif "care" in text or "nurture" in text or "mother" in text:
-        play_audio("motherly")
-    elif "danger" in text or "protest" in text or "threat" in text:
-        play_audio("danger")
-    elif "scared" in text or "terrified" in text or "petrified" in text:
-        play_audio("terrified")
-    elif "territory" in text or "mine" in text or "protect" in text:
-        play_audio("territorial_soft")
-    else:
-        print("No matching audio file for this input.")
+// Function to categorize and respond based on keywords
+function categorizeAndRespond(text, duration) {
+    let audio = audios.greeting; // Default to greeting
 
-# Function to interact with the OpenAI chatbot
-def get_chat_response(prompt):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response['choices'][0]['message']['content']
+    for (const [category, words] of Object.entries(keywords)) {
+        if (words.some(word => text.includes(word))) {
+            audio = audios[category];
+            break;
+        }
+    }
 
-# Main chatbot loop
-def chat():
-    print("Chatbot is running. Type something to interact.")
-    while True:
-        user_input = input("You: ")
-        
-        # Play the corresponding audio based on user input
-        categorize_and_play(user_input)
-        
-        # Get a chatbot response (optional)
-        response = get_chat_response(user_input)
-        print(f"Chatbot: {response}")
+    playAudioForDuration(audio, duration);
+}
 
-if __name__ == "__main__":
-    chat()
+// Play audio function that ensures a response
+function playAudioForDuration(audio, duration) {
+    audio.currentTime = 0;
+    audio.play();
+    setTimeout(() => {
+        audio.pause();
+    }, duration * 1000);
+}
+
+// Event listeners for mouse clicks
+document.addEventListener('mousedown', () => {
+    if (!recognition?.started) {
+        initSpeechRecognition();
+        recognition.start();
+        recognition.started = true;
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    if (recognition?.started) {
+        recognition.stop();
+        recognition.started = false;
+    }
+});
