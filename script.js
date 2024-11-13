@@ -1,6 +1,5 @@
 let recognition;
 let statementStartTime, statementEndTime;
-let drawingEnabled = false;
 
 // Load audio files
 const audios = {
@@ -22,8 +21,8 @@ function initSpeechRecognition() {
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = false; // Stop listening after speech is detected
+    recognition.interimResults = false; // Only use final results
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
@@ -38,14 +37,21 @@ function initSpeechRecognition() {
         const confidence = event.results[0][0].confidence;
 
         console.log("Transcript:", transcript);
+        console.log("Confidence:", confidence);
 
-        if (confidence > 0.5) {
+        if (confidence > 0.7) { // Higher confidence threshold to filter out noise
             const duration = (statementEndTime - statementStartTime) / 1000;
             categorizeAndRespond(transcript, duration);
         } else {
             console.log("Low confidence, defaulting to greeting.");
             playAudioForDuration(audios.greeting, 2);
         }
+    };
+
+    // Stop listening when the user pauses speaking
+    recognition.onspeechend = () => {
+        console.log("User stopped speaking.");
+        recognition.stop();
     };
 
     recognition.onerror = (event) => {
@@ -55,7 +61,6 @@ function initSpeechRecognition() {
 
     recognition.onend = () => {
         console.log("Recognition ended.");
-        enableDrawing();
     };
 
     recognition.start();
@@ -69,67 +74,42 @@ function restartRecognition() {
         } catch (error) {
             console.error("Error restarting recognition:", error);
         }
-    }, 500);
+    }, 1000);
 }
 
 // Categorize speech and respond
 function categorizeAndRespond(text, duration) {
     let audio;
 
-    if (/hi|hello|hey/.test(text)) audio = audios.greeting;
-    else if (/care|support|nice/.test(text)) audio = audios.motherly;
-    else if (/angry|furious/.test(text)) audio = audios.aggressive;
+    // Categorize based on the tone of the speech
+    if (/hi|hello|hey|morning|afternoon|evening/.test(text)) audio = audios.greeting;
+    else if (/care|support|kind/.test(text)) audio = audios.motherly;
+    else if (/angry|furious|rage/.test(text)) audio = audios.aggressive;
     else if (/defensive|insecure/.test(text)) audio = audios.defensive;
-    else if (/flirt|sexy/.test(text)) audio = audios.flirtatious;
+    else if (/flirt|sexy|beautiful/.test(text)) audio = audios.flirtatious;
     else if (/danger|threat/.test(text)) audio = audios.danger;
     else if (/scared|terrified/.test(text)) audio = audios.terrified;
     else if (/territory|mine/.test(text)) audio = audios.territorial;
-    else audio = audios.greeting;
+    else audio = audios.greeting; // Default to greeting
 
     playAudioForDuration(audio, duration);
 }
 
 // Play audio for specified duration
 function playAudioForDuration(audio, duration) {
+    console.log(`Playing audio for ${duration} seconds.`);
     audio.currentTime = 0;
+
     audio.play()
         .then(() => {
             setTimeout(() => {
                 audio.pause();
                 audio.currentTime = 0;
-                enableDrawing();
+                restartRecognition();
             }, duration * 1000);
         })
         .catch(error => console.error("Error playing audio:", error));
 }
 
-// Enable drawing mode
-function enableDrawing() {
-    console.log("Drawing mode enabled.");
-    document.getElementById('status').textContent = "Drawing mode enabled!";
-    drawingEnabled = true;
-}
-
-// Drawing functionality
-const canvas = document.getElementById('drawingCanvas');
-const context = canvas.getContext('2d');
-let isDrawing = false;
-
-canvas.addEventListener('mousedown', () => isDrawing = drawingEnabled);
-canvas.addEventListener('mouseup', () => isDrawing = false);
-canvas.addEventListener('mousemove', draw);
-
-function draw(event) {
-    if (!isDrawing) return;
-    context.lineWidth = 5;
-    context.lineCap = 'round';
-    context.strokeStyle = '#00FFCC';
-
-    context.lineTo(event.clientX, event.clientY);
-    context.stroke();
-    context.beginPath();
-    context.moveTo(event.clientX, event.clientY);
-}
-
-// Initialize on page load
+// Start listening when the page loads
 window.onload = initSpeechRecognition;
