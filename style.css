@@ -1,71 +1,46 @@
-/* General reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-color: #000; /* Black background */
-    color: #fff; /* White text */
+    background-color: #000;
+    color: #fff;
     font-family: 'Helvetica', sans-serif;
-    overflow: hidden;
 }
 
-.container {
-    text-align: center;
-    padding: 20px;
-    border-radius: 15px;
-    background-color: #1a1a1a; /* Slightly lighter black */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-    max-width: 600px;
-    width: 90%;
-}
-
-/* Title styling */
-.title {
-    font-style: italic;
-    text-transform: uppercase;
-    color: #FFFFFF;
-    margin-bottom: 20px;
-}
-
-/* Button styling */
-#startButton {
-    background-color: #00FFCC;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 10px;
-    cursor: pointer;
-    color: #000;
-    font-weight: bold;
-    margin-top: 20px;
-    transition: background-color 0.3s ease;
-}
-
-#startButton:hover {
-    background-color: #00CCA3;
-}
-
-#startButton:active {
-    background-color: #00997A;
-}
-
-/* Listening status indicator */
 #status {
-    font-size: 18px;
     margin-top: 20px;
-    padding: 10px;
+    font-size: 18px;
+    background-colorbody {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #000;
+    color: #fff;
+    font-family: 'Helvetica', sans-serif;
+}
+
+#status {
+    margin-top: 20px;
+    font-size: 18px;
     background-color: #333;
+    padding: 10px;
     border-radius: 10px;
 }
 
 .listening {
-    background-color: #FF3333; /* Red when actively listening */
+    background-color: #FF3333;
+    color: #fff;
+}
+: #333;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.listening {
+    background-color: #FF3333;
     color: #fff;
 }
