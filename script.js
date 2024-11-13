@@ -2,6 +2,7 @@ let recognition;
 let greetingAudio, aggressiveAudio, defensiveAudio, flirtatiousAudio;
 let motherlyAudio, dangerAudio, terrifiedAudio, territorialSoftAudio;
 
+// Load audio files
 function preloadAudios() {
     greetingAudio = new Audio('coo-greeting.mp3');
     aggressiveAudio = new Audio('aggressive-territorial.mp3');
@@ -13,9 +14,9 @@ function preloadAudios() {
     territorialSoftAudio = new Audio('territorial-soft.mp3');
 }
 
-// Preload audio files
 preloadAudios();
 
+// Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
         alert("Your browser does not support speech recognition. Please use Chrome.");
@@ -23,35 +24,47 @@ function initSpeechRecognition() {
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true; // Keep listening continuously
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
+    // When it starts listening
     recognition.onstart = () => {
         document.body.classList.add('inverted'); // Invert colors when listening
         document.getElementById('transcript').innerText = "Listening...";
     };
 
+    // When it detects speech
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase();
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
         document.getElementById('transcript').innerText = `You said: ${transcript}`;
         handleSpeechInput(transcript);
-        setTimeout(() => recognition.start(), 500); // Restart listening
     };
 
+    // If an error occurs, restart listening
     recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        setTimeout(() => recognition.start(), 500); // Restart on error
+        restartRecognition();
     };
 
+    // When speech recognition ends, restart it
     recognition.onend = () => {
-        document.body.classList.remove('inverted'); // Revert colors when not listening
-        setTimeout(() => recognition.start(), 500); // Restart listening
+        document.body.classList.remove('inverted'); // Revert colors
+        restartRecognition();
     };
 
-    recognition.start(); // Automatically start listening
+    // Start listening
+    recognition.start();
 }
 
+// Function to restart recognition after a short delay
+function restartRecognition() {
+    setTimeout(() => {
+        recognition.start();
+    }, 500);
+}
+
+// Handle the user's speech input and play corresponding audio
 function handleSpeechInput(text) {
     let audioQueue = [];
 
@@ -83,6 +96,7 @@ function handleSpeechInput(text) {
     playAudioQueue(audioQueue);
 }
 
+// Play audio files sequentially
 function playAudioQueue(queue) {
     if (queue.length === 0) return;
 
@@ -95,4 +109,5 @@ function playAudioQueue(queue) {
     };
 }
 
+// Start listening when the page loads
 window.onload = initSpeechRecognition;
