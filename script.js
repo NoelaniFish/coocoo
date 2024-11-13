@@ -1,5 +1,6 @@
 let recognition;
 let pauseTimer = null;
+const statusElement = document.getElementById('status');
 
 // Load the audio files
 const audios = {
@@ -25,9 +26,14 @@ function initSpeechRecognition() {
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
+    recognition.onstart = () => {
+        statusElement.textContent = "Listening...";
+    };
+
     recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log("Transcript detected:", transcript);
+        statusElement.textContent = "Processing...";
 
         // Clear any existing pause timer
         clearTimeout(pauseTimer);
@@ -41,10 +47,14 @@ function initSpeechRecognition() {
 
     recognition.onerror = (event) => {
         console.error("Error:", event.error);
+        statusElement.textContent = "Error occurred. Restarting...";
         restartRecognition();
     };
 
-    recognition.onend = () => restartRecognition();
+    recognition.onend = () => {
+        statusElement.textContent = "Waiting for you to speak...";
+        restartRecognition();
+    };
 
     recognition.start();
 }
@@ -62,10 +72,10 @@ function restartRecognition() {
 
 // Detect emotions and respond with appropriately timed audio
 function detectEmotionAndRespond(text) {
+    statusElement.textContent = "Analyzing emotions...";
     const durations = getEmotionDurations(text);
     const audioQueue = [];
 
-    // Prepare audio responses based on detected emotions and durations
     for (const [emotion, duration] of Object.entries(durations)) {
         const audio = audios[emotion];
         if (audio) {
@@ -77,55 +87,10 @@ function detectEmotionAndRespond(text) {
     playAudioQueue(audioQueue);
 }
 
-// Analyze text and estimate durations for each emotion
-function getEmotionDurations(text) {
-    const words = text.split(" ");
-    const totalWords = words.length;
-
-    const emotions = {
-        greeting: /hi|hello|hey/,
-        aggressive: /angry|furious|rage/,
-        defensive: /defensive|insecure|small/,
-        flirtatious: /flirt|sexy|beautiful/,
-        motherly: /care|nurture|mother/,
-        danger: /danger|protest|threat/,
-        terrified: /scared|terrified|petrified/,
-        territorial: /territory|mine|protect/
-    };
-
-    const durations = {};
-
-    for (const [emotion, regex] of Object.entries(emotions)) {
-        const matchedWords = words.filter(word => regex.test(word)).length;
-        const duration = (matchedWords / totalWords) * getTotalDuration(text);
-        if (duration > 0) durations[emotion] = duration;
-    }
-
-    return durations;
-}
-
-// Estimate the total duration of the speech in seconds
-function getTotalDuration(text) {
-    const wordsPerMinute = 130; // Average speaking rate
-    const totalWords = text.split(" ").length;
-    return (totalWords / wordsPerMinute) * 60;
-}
-
-// Adjust the audio duration by changing its playback rate
-function adjustAudioDuration(audio, duration) {
-    const originalDuration = audio.duration;
-    
-    // Adjust playback rate to fit the desired duration
-    if (originalDuration > 0) {
-        audio.playbackRate = originalDuration / duration;
-    }
-
-    return audio;
-}
-
 // Play the queued audio files sequentially
 function playAudioQueue(queue) {
     if (queue.length === 0) {
+        statusElement.textContent = "Waiting for you to speak...";
         restartRecognition();
         return;
     }
