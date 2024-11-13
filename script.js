@@ -64,12 +64,44 @@ function initSpeechRecognition() {
 
 // Comprehensive keyword list for each category
 const keywords = {
-    motherly: ["love", "support", "hug", "calm", "family", "pets", "caring", "nurturing"],
-    aggressive: ["tear", "destroy", "rage", "hate", "fight", "angry", "furious"],
-    defensive: ["me", "myself", "stop", "scared", "why", "leave me alone"],
-    flirtatious: ["cute", "fun", "flirt", "sexy", "gorgeous", "hot", "kiss", "darling"],
-    danger: ["danger", "alert", "run", "suspicious", "trap", "beware", "caution"],
-    terrified: ["freaking out", "shaking", "scared", "panic", "help", "nightmare"]
+    motherly: [
+        "calm", "love", "support", "hug", "I love you", "marry me", "chosen family", "love of my life", 
+        "you mean the world", "you’re my everything", "soft heart", "I’m here for you", "family", "pets", 
+        "rest up", "self-care", "zen", "grounded", "platonic love", "best friend", "squad", "fam", "safe", 
+        "comforting", "breathe", "sunshine", "nature", "tree", "forest", "beach", "river", "sunset", 
+        "flowers", "meadow", "doggo", "cat", "horse", "farm", "back home", "mother", "father", "sister", 
+        "brother", "aunt", "uncle", "grandpa", "child", "daughter", "son", "toddler", "funny", "hilarious",
+        "adopt", "rescue", "furry", "meow", "home sweet home", "empathy", "thoughtful", "cherish", 
+        "bestie", "mommy", "mama", "daddy"
+    ],
+    aggressive: [
+        "tear", "destroy", "rage", "cancel", "hate", "fuck no", "I hate you", "disgust me", "burn it down", 
+        "wreck", "violence", "fight me", "alpha", "dominance", "stomp", "explode", "fuck off", "pissed", 
+        "clap back", "annoying", "toxic", "triggered", "angry", "furious", "revenge", "bulldoze", 
+        "smash", "curse", "fury", "crush"
+    ],
+    defensive: [
+        "me", "myself", "stop", "scared", "why is this happening", "oh no", "leave me alone", 
+        "I didn’t mean it", "overwhelmed", "insecure", "lost", "not good enough", "hurt", "judgment", 
+        "misunderstood", "defensive", "paranoid", "annoying", "ugly", "I’m trying my best"
+    ],
+    flirtatious: [
+        "cute", "fun", "flirt", "crush", "simp", "bae", "hot", "lesbian", "gay", "sapphic", "mlm", 
+        "you look great", "gorgeous", "sexy", "stunning", "fingering", "blowjob", "glory hole", "eating out",
+        "penetration", "handjob", "rimming", "goldstar", "hey mamas", "twink", "butch", "futch", "femme", 
+        "cookie", "loving", "horny", "wink", "darling", "kiss", "sweetie", "you’re breathtaking"
+    ],
+    danger: [
+        "danger", "alert", "red flag", "watch out", "run", "be careful", "suspicious", "creepy", 
+        "get out", "evacuate", "high alert", "hazardous", "trap", "brace yourself", "beware", "caution", 
+        "threat level", "sketchy", "secure the area"
+    ],
+    terrified: [
+        "freaking out", "shaking", "scared", "panic", "help me", "dread", "terrified", "I can’t breathe", 
+        "haunted", "losing it", "nightmare", "heart racing", "crying", "paralyzed with fear", 
+        "distress", "horror", "freaky", "spooked", "hyperventilating", "anxiety", "I’m trembling"
+    ]
+};
 };
 
 // Function to categorize and respond based on keywords
