@@ -13,6 +13,25 @@ const audios = {
     terrified: new Audio('terrified-petrified-grunts.mp3'),
     territorial: new Audio('territorial-soft.mp3')
 };
+function testAudioPlayback() {
+    const testAudio = new Audio('coo-greeting.mp3'); // Use any audio file for testing
+    const statusElement = document.getElementById('test-status');
+
+    testAudio.play()
+        .then(() => {
+            statusElement.textContent = "Audio is playing!";
+            console.log("Playing audio: coo-greeting.mp3");
+        })
+        .catch(error => {
+            statusElement.textContent = "Error playing audio!";
+            console.error("Error playing audio:", error);
+        });
+
+    testAudio.onended = () => {
+        statusElement.textContent = "Audio playback finished.";
+        console.log("Audio playback finished.");
+    };
+}
 
 // Initialize the speech recognition
 function initSpeechRecognition() {
