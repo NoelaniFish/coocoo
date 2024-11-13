@@ -1,5 +1,5 @@
 let recognition;
-let statementCount = 0;
+let statementStartTime, statementEndTime;
 
 // Load the audio files
 const audios = {
@@ -21,20 +21,29 @@ function initSpeechRecognition() {
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = false; // Listen for one phrase at a time
-    recognition.interimResults = false; // Only use final results
+    recognition.continuous = false;
+    recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => console.log("Listening...");
+    recognition.onstart = () => {
+        console.log("Listening...");
+        document.getElementById('status').textContent = "Listening...";
+        statementStartTime = new Date().getTime(); // Start time
+    };
 
     recognition.onresult = (event) => {
+        statementEndTime = new Date().getTime(); // End time
         const transcript = event.results[0][0].transcript.toLowerCase();
         const confidence = event.results[0][0].confidence;
-        console.log("Transcript:", transcript, "| Confidence:", confidence);
 
-        // Only respond if the confidence is reasonably high
+        console.log("Transcript:", transcript);
+        console.log("Confidence:", confidence);
+
         if (confidence > 0.6) {
-            detectEmotionAndRespond(transcript);
+            const duration = (statementEndTime - statementStartTime) / 1000;
+            detectEmotionAndRespond(transcript, duration);
+        } else {
+            console.log("Low confidence, not responding.");
         }
     };
 
@@ -45,6 +54,7 @@ function initSpeechRecognition() {
 
     recognition.onend = () => {
         console.log("Recognition ended.");
+        restartRecognition();
     };
 
     recognition.start();
@@ -59,56 +69,47 @@ function restartRecognition() {
         } catch (error) {
             console.error("Error restarting recognition:", error);
         }
-    }, 1000);
+    }, 500);
 }
 
-// Detect emotions and respond with corresponding audio
-function detectEmotionAndRespond(text) {
-    const audioQueue = [];
-
-    if (/hi|hello|hey/.test(text)) {
-        audioQueue.push(audios.greeting);
-    } else if (/angry|furious|rage/.test(text)) {
-        audioQueue.push(audios.aggressive);
-    } else if (/defensive|insecure|small/.test(text)) {
-        audioQueue.push(audios.defensive);
-    } else if (/flirt|sexy|beautiful/.test(text)) {
-        audioQueue.push(audios.flirtatious);
-    } else if (/care|nurture|mother/.test(text)) {
-        audioQueue.push(audios.motherly);
-    } else if (/danger|protest|threat/.test(text)) {
-        audioQueue.push(audios.danger);
-    } else if (/scared|terrified|petrified/.test(text)) {
-        audioQueue.push(audios.terrified);
-    } else if (/territory|mine|protect/.test(text)) {
-        audioQueue.push(audios.territorial);
-    } else {
-        console.log("No specific emotion detected, using default response.");
-        audioQueue.push(audios.motherly); // Default response
-    }
-
-    playAudioQueue(audioQueue);
+// Detect emotions and play corresponding audio
+function detectEmotionAndRespond(text, duration) {
+    const audio = getAudioForEmotion(text);
+    playAudioForDuration(audio, duration);
 }
 
-// Play the queued audio files sequentially
-function playAudioQueue(queue) {
-    if (queue.length === 0) {
-        restartRecognition();
-        return;
-    }
+// Determine which audio to play based on the detected emotion
+function getAudioForEmotion(text) {
+    if (/hi|hello|hey/.test(text)) return audios.greeting;
+    if (/angry|furious|rage/.test(text)) return audios.aggressive;
+    if (/defensive|insecure|small/.test(text)) return audios.defensive;
+    if (/flirt|sexy|beautiful/.test(text)) return audios.flirtatious;
+    if (/care|nurture|mother/.test(text)) return audios.motherly;
+    if (/danger|protest|threat/.test(text)) return audios.danger;
+    if (/scared|terrified|petrified/.test(text)) return audios.terrified;
+    if (/territory|mine|protect/.test(text)) return audios.territorial;
+    
+    // Default to "coo-greeting" if no emotion is detected
+    console.log("No specific emotion detected, using default greeting.");
+    return audios.greeting;
+}
 
-    const audio = queue.shift();
+// Play the audio for the specified duration
+function playAudioForDuration(audio, duration) {
+    console.log(`Playing audio for ${duration} seconds.`);
     audio.currentTime = 0;
 
     audio.play()
         .then(() => {
-            console.log("Playing audio:", audio.src);
+            setTimeout(() => {
+                audio.pause();
+                audio.currentTime = 0; // Reset audio
+                restartRecognition();
+            }, duration * 1000); // Convert duration to milliseconds
         })
         .catch(error => {
             console.error("Error playing audio:", error);
         });
-
-    audio.onended = () => playAudioQueue(queue);
 }
 
 // Start listening when the page loads
