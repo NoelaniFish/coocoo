@@ -42,6 +42,7 @@ function initSpeechRecognition() {
             const duration = (statementEndTime - statementStartTime) / 1000;
             categorizeAndRespond(transcript, duration);
         } else {
+            // Always play a sound response
             playAudioForDuration(audios.greeting, 2);
         }
     };
@@ -65,46 +66,33 @@ function initSpeechRecognition() {
 const keywords = {
     motherly: [
         "calm", "love", "support", "hug", "I love you", "marry me", "chosen family", "love of my life", 
-        "you mean the world", "you’re my everything", "soft heart", "I’m here for you", "family", "pets", 
-        "rest up", "self-care", "zen", "grounded", "platonic love", "best friend", "squad", "fam", "safe", 
-        "comforting", "breathe", "sunshine", "nature", "tree", "forest", "beach", "river", "sunset", 
-        "flowers", "meadow", "doggo", "cat", "horse", "farm", "back home", "mother", "father", "sister", 
-        "brother", "aunt", "uncle", "grandpa", "child", "daughter", "son", "toddler", "funny", "hilarious",
-        "adopt", "rescue", "furry", "meow", "home sweet home", "empathy", "thoughtful", "cherish", 
-        "bestie", "mommy", "mama", "daddy"
+        "you mean the world", "pets", "mother", "father", "siblings", "doggo", "home", "meadow", "nature"
     ],
     aggressive: [
-        "tear", "destroy", "rage", "cancel", "hate", "fuck no", "I hate you", "disgust me", "burn it down", 
-        "wreck", "violence", "fight me", "alpha", "dominance", "stomp", "explode", "fuck off", "pissed", 
-        "clap back", "annoying", "toxic", "triggered", "angry", "furious", "revenge", "bulldoze", 
-        "smash", "curse", "fury", "crush"
+        "tear", "destroy", "rage", "cancel", "hate", "fuck no", "disgust me", "burn it down", "violence", 
+        "fight", "dominance", "pissed", "annoying", "triggered", "angry", "furious"
     ],
     defensive: [
-        "me", "myself", "stop", "scared", "why is this happening", "oh no", "leave me alone", 
-        "I didn’t mean it", "overwhelmed", "insecure", "lost", "not good enough", "hurt", "judgment", 
-        "misunderstood", "defensive", "paranoid", "annoying", "ugly", "I’m trying my best"
+        "me", "myself", "stop", "scared", "why is this happening", "leave me alone", 
+        "I didn’t mean it", "overwhelmed", "lost", "not good enough", "hurt"
     ],
     flirtatious: [
-        "cute", "fun", "flirt", "crush", "simp", "bae", "hot", "lesbian", "gay", "sapphic", "mlm", 
-        "you look great", "gorgeous", "sexy", "stunning", "fingering", "blowjob", "glory hole", "eating out",
-        "penetration", "handjob", "rimming", "goldstar", "hey mamas", "twink", "butch", "futch", "femme", 
-        "cookie", "loving", "horny", "wink", "darling", "kiss", "sweetie", "you’re breathtaking"
+        "cute", "fun", "flirt", "crush", "lesbian", "hot", "sexy", "stunning", "gorgeous", 
+        "sweetie", "darling", "kiss", "horny", "wink", "femme"
     ],
     danger: [
-        "danger", "alert", "red flag", "watch out", "run", "be careful", "suspicious", "creepy", 
-        "get out", "evacuate", "high alert", "hazardous", "trap", "brace yourself", "beware", "caution", 
-        "threat level", "sketchy", "secure the area"
+        "danger", "alert", "red flag", "run", "be careful", "suspicious", "creepy", 
+        "get out", "evacuate", "trap", "beware", "caution", "brace yourself"
     ],
     terrified: [
-        "freaking out", "shaking", "scared", "panic", "help me", "dread", "terrified", "I can’t breathe", 
-        "haunted", "losing it", "nightmare", "heart racing", "crying", "paralyzed with fear", 
-        "distress", "horror", "freaky", "spooked", "hyperventilating", "anxiety", "I’m trembling"
+        "freaking out", "shaking", "scared", "panic", "help me", "dread", "I can’t breathe", 
+        "nightmare", "heart racing", "crying", "paralyzed", "hyperventilating"
     ]
 };
 
 // Function to categorize and respond based on keywords
 function categorizeAndRespond(text, duration) {
-    let audio = audios.greeting;
+    let audio = audios.greeting; // Default to greeting
 
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => text.includes(word))) {
@@ -116,6 +104,7 @@ function categorizeAndRespond(text, duration) {
     playAudioForDuration(audio, duration);
 }
 
+// Play audio function that ensures a response
 function playAudioForDuration(audio, duration) {
     audio.currentTime = 0;
     audio.play();
@@ -124,8 +113,18 @@ function playAudioForDuration(audio, duration) {
     }, duration * 1000);
 }
 
+// Event listeners for mouse clicks
 document.addEventListener('mousedown', () => {
     if (!recognition?.started) {
         initSpeechRecognition();
         recognition.start();
-        r
+        recognition.started = true;
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    if (recognition?.started) {
+        recognition.stop();
+        recognition.started = false;
+    }
+});
