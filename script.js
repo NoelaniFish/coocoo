@@ -1,6 +1,7 @@
 let recognition;
 let statementStartTime, statementEndTime;
 const statusText = document.getElementById('status');
+let isRecognitionActive = false;
 
 // Load audio files
 const audios = {
@@ -42,7 +43,6 @@ function initSpeechRecognition() {
             const duration = (statementEndTime - statementStartTime) / 1000;
             categorizeAndRespond(transcript, duration);
         } else {
-            // Always play a sound response
             playAudioForDuration(audios.greeting, 2);
         }
     };
@@ -55,47 +55,31 @@ function initSpeechRecognition() {
 
     recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
+        statusText.textContent = "Error: " + event.error;
+        statusText.classList.remove('listening');
     };
 
     recognition.onend = () => {
+        isRecognitionActive = false;
         console.log("Recognition ended.");
     };
 }
 
-// Comprehensive keyword list for each category
+// Keyword categories
 const keywords = {
-    motherly: [
-        "calm", "love", "support", "hug", "I love you", "marry me", "chosen family", "love of my life", 
-        "you mean the world", "pets", "mother", "father", "siblings", "doggo", "home", "meadow", "nature"
-    ],
-    aggressive: [
-        "tear", "destroy", "rage", "cancel", "hate", "fuck no", "disgust me", "burn it down", "violence", 
-        "fight", "dominance", "pissed", "annoying", "triggered", "angry", "furious"
-    ],
-    defensive: [
-        "me", "myself", "stop", "scared", "why is this happening", "leave me alone", 
-        "I didn’t mean it", "overwhelmed", "lost", "not good enough", "hurt"
-    ],
-    flirtatious: [
-        "cute", "fun", "flirt", "crush", "lesbian", "hot", "sexy", "stunning", "gorgeous", 
-        "sweetie", "darling", "kiss", "horny", "wink", "femme"
-    ],
-    danger: [
-        "danger", "alert", "red flag", "run", "be careful", "suspicious", "creepy", 
-        "get out", "evacuate", "trap", "beware", "caution", "brace yourself"
-    ],
-    terrified: [
-        "freaking out", "shaking", "scared", "panic", "help me", "dread", "I can’t breathe", 
-        "nightmare", "heart racing", "crying", "paralyzed", "hyperventilating"
-    ]
+    motherly: ["calm", "love", "support", "hug", "pets", "home", "nature"],
+    aggressive: ["tear", "destroy", "rage", "hate", "violence", "angry"],
+    defensive: ["me", "myself", "stop", "scared", "leave me alone", "hurt"],
+    flirtatious: ["cute", "fun", "flirt", "hot", "sexy", "kiss", "femme"],
+    danger: ["danger", "alert", "run", "suspicious", "evacuate", "beware"],
+    terrified: ["panic", "help", "nightmare", "crying", "hyperventilating"]
 };
 
-// Function to categorize and respond based on keywords
 function categorizeAndRespond(text, duration) {
-    let audio = audios.greeting; // Default to greeting
+    let audio = audios.greeting;
 
     for (const [category, words] of Object.entries(keywords)) {
-        if (words.some(word => text.includes(word))) {
+        if (words.some(word => new RegExp(`\\b${word}\\b`, 'i').test(text))) {
             audio = audios[category];
             break;
         }
@@ -104,27 +88,27 @@ function categorizeAndRespond(text, duration) {
     playAudioForDuration(audio, duration);
 }
 
-// Play audio function that ensures a response
 function playAudioForDuration(audio, duration) {
     audio.currentTime = 0;
     audio.play();
     setTimeout(() => {
         audio.pause();
+        audio.currentTime = 0;
     }, duration * 1000);
 }
 
 // Event listeners for mouse clicks
 document.addEventListener('mousedown', () => {
-    if (!recognition?.started) {
+    if (!isRecognitionActive) {
         initSpeechRecognition();
         recognition.start();
-        recognition.started = true;
+        isRecognitionActive = true;
     }
 });
 
 document.addEventListener('mouseup', () => {
-    if (recognition?.started) {
+    if (isRecognitionActive) {
         recognition.stop();
-        recognition.started = false;
+        isRecognitionActive = false;
     }
 });
