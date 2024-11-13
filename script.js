@@ -1,8 +1,6 @@
 let recognition;
-let pauseTimer = null;
-let statementCount = 0; // Tracks the number of statements to determine early vs. general responses
+let statementCount = 0;
 
-// Load the audio files
 const audios = {
     greeting: new Audio('coo-greeting.mp3'),
     aggressive: new Audio('aggressive-territorial.mp3'),
@@ -14,11 +12,9 @@ const audios = {
     territorial: new Audio('territorial-soft.mp3')
 };
 
-
-// Initialize the speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
-        alert("Please use Google Chrome for this feature.");
+        alert("Your browser does not support speech recognition. Please use Google Chrome.");
         return;
     }
 
@@ -27,92 +23,73 @@ function initSpeechRecognition() {
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => console.log("Listening...");
+    recognition.onstart = () => {
+        console.log("Speech recognition started. Listening...");
+        document.getElementById('status').textContent = "Listening...";
+    };
 
     recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        console.log("Transcript detected:", transcript);
-recognition.onresult = (event) => {
-    const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-    console.log("Transcript detected:", transcript);
-    document.getElementById('status').textContent = `Heard: ${transcript}`;
-};
+        const confidence = event.results[event.results.length - 1][0].confidence;
+        console.log(`Transcript: ${transcript}, Confidence: ${confidence}`);
 
-        // Clear any existing pause timer
-        clearTimeout(pauseTimer);
-
-        // Start a timer for a 1.5-second pause
-        pauseTimer = setTimeout(() => {
-            recognition.stop();
+        // Only respond if confidence is above 0.5 (adjustable if needed)
+        if (confidence > 0.5) {
             detectEmotionAndRespond(transcript);
-        }, 1500);
+        }
     };
 
     recognition.onerror = (event) => {
-        console.error("Error:", event.error);
+        console.error("Speech recognition error:", event.error);
+        document.getElementById('status').textContent = "Error occurred. Restarting...";
         restartRecognition();
     };
 
-    recognition.onend = () => restartRecognition();
+    recognition.onend = () => {
+        console.log("Speech recognition ended. Restarting...");
+        restartRecognition();
+    };
 
     recognition.start();
 }
 
-// Restart recognition
 function restartRecognition() {
     setTimeout(() => {
         try {
             recognition.start();
+            console.log("Restarting speech recognition...");
         } catch (error) {
             console.error("Error restarting recognition:", error);
         }
     }, 500);
 }
 
-// Detect emotions and respond with the appropriate audio or default
 function detectEmotionAndRespond(text) {
-    statementCount++; // Increase statement count with each response
     const audioQueue = [];
 
-    // Check for specific emotional cues
     if (/hi|hello|hey/.test(text)) {
         audioQueue.push(audios.greeting);
-    }
-    if (/angry|furious|rage/.test(text)) {
+    } else if (/angry|furious|rage/.test(text)) {
         audioQueue.push(audios.aggressive);
-    }
-    if (/defensive|insecure|small/.test(text)) {
+    } else if (/defensive|insecure|small/.test(text)) {
         audioQueue.push(audios.defensive);
-    }
-    if (/flirt|sexy|beautiful/.test(text)) {
+    } else if (/flirt|sexy|beautiful/.test(text)) {
         audioQueue.push(audios.flirtatious);
-    }
-    if (/care|nurture|mother/.test(text)) {
+    } else if (/care|nurture|mother/.test(text)) {
         audioQueue.push(audios.motherly);
-    }
-    if (/danger|protest|threat/.test(text)) {
+    } else if (/danger|protest|threat/.test(text)) {
         audioQueue.push(audios.danger);
-    }
-    if (/scared|terrified|petrified/.test(text)) {
+    } else if (/scared|terrified|petrified/.test(text)) {
         audioQueue.push(audios.terrified);
-    }
-    if (/territory|mine|protect/.test(text)) {
+    } else if (/territory|mine|protect/.test(text)) {
         audioQueue.push(audios.territorial);
-    }
-
-    // Default audio responses for ambiguous statements
-    if (audioQueue.length === 0) {
-        if (statementCount <= 1) {
-            audioQueue.push(audios.greeting); // Early statement: use greeting
-        } else {
-            audioQueue.push(audios.motherly); // General: use motherly
-        }
+    } else {
+        audioQueue.push(audios.motherly); // Default response
     }
 
     playAudioQueue(audioQueue);
 }
 
-// Play the queued audio files sequentially
 function playAudioQueue(queue) {
     if (queue.length === 0) {
         restartRecognition();
@@ -121,10 +98,16 @@ function playAudioQueue(queue) {
 
     const audio = queue.shift();
     audio.currentTime = 0;
-    audio.play();
+
+    audio.play()
+        .then(() => {
+            console.log("Playing audio:", audio.src);
+        })
+        .catch(error => {
+            console.error("Error playing audio:", error);
+        });
 
     audio.onended = () => playAudioQueue(queue);
 }
 
-// Start listening when the page loads
 window.onload = initSpeechRecognition;
