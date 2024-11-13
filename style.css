@@ -12,7 +12,7 @@ body {
     height: 100vh;
     background-color: #000000; /* Black background */
     color: #FFFFFF; /* White text */
-    font-family: 'Helvetica', sans-serif;
+    font-family: 'Helvetica', 'ITALICS' sans-serif;
 }
 
 .container {
