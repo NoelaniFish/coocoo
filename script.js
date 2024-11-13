@@ -1,6 +1,7 @@
 let recognition;
 let statementCount = 0;
 
+// Load the audio files
 const audios = {
     greeting: new Audio('coo-greeting.mp3'),
     aggressive: new Audio('aggressive-territorial.mp3'),
@@ -12,6 +13,7 @@ const audios = {
     territorial: new Audio('territorial-soft.mp3')
 };
 
+// Function to initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
         alert("Your browser does not support speech recognition. Please use Google Chrome.");
@@ -24,24 +26,17 @@ function initSpeechRecognition() {
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
-        console.log("Speech recognition started. Listening...");
-        document.getElementById('status').textContent = "Listening...";
+        console.log("Speech recognition started.");
     };
 
     recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        const confidence = event.results[event.results.length - 1][0].confidence;
-        console.log(`Transcript: ${transcript}, Confidence: ${confidence}`);
-
-        // Only respond if confidence is above 0.5 (adjustable if needed)
-        if (confidence > 0.5) {
-            detectEmotionAndRespond(transcript);
-        }
+        console.log("Transcript detected:", transcript);
+        detectEmotionAndRespond(transcript);
     };
 
     recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        document.getElementById('status').textContent = "Error occurred. Restarting...";
         restartRecognition();
     };
 
@@ -53,61 +48,61 @@ function initSpeechRecognition() {
     recognition.start();
 }
 
+// Restart recognition
 function restartRecognition() {
     setTimeout(() => {
         try {
             recognition.start();
-            console.log("Restarting speech recognition...");
         } catch (error) {
             console.error("Error restarting recognition:", error);
         }
     }, 500);
 }
 
+// Detect emotions and play the corresponding audio clip
 function detectEmotionAndRespond(text) {
-    const audioQueue = [];
+    console.log("Analyzing text:", text);
 
     if (/hi|hello|hey/.test(text)) {
-        audioQueue.push(audios.greeting);
+        playAudio(audios.greeting, "Greeting");
     } else if (/angry|furious|rage/.test(text)) {
-        audioQueue.push(audios.aggressive);
+        playAudio(audios.aggressive, "Aggressive");
     } else if (/defensive|insecure|small/.test(text)) {
-        audioQueue.push(audios.defensive);
+        playAudio(audios.defensive, "Defensive");
     } else if (/flirt|sexy|beautiful/.test(text)) {
-        audioQueue.push(audios.flirtatious);
+        playAudio(audios.flirtatious, "Flirtatious");
     } else if (/care|nurture|mother/.test(text)) {
-        audioQueue.push(audios.motherly);
+        playAudio(audios.motherly, "Motherly");
     } else if (/danger|protest|threat/.test(text)) {
-        audioQueue.push(audios.danger);
+        playAudio(audios.danger, "Danger");
     } else if (/scared|terrified|petrified/.test(text)) {
-        audioQueue.push(audios.terrified);
+        playAudio(audios.terrified, "Terrified");
     } else if (/territory|mine|protect/.test(text)) {
-        audioQueue.push(audios.territorial);
+        playAudio(audios.territorial, "Territorial");
     } else {
-        audioQueue.push(audios.motherly); // Default response
+        console.log("No specific emotion detected, using default response.");
+        playAudio(audios.motherly, "Default Motherly");
     }
-
-    playAudioQueue(audioQueue);
 }
 
-function playAudioQueue(queue) {
-    if (queue.length === 0) {
-        restartRecognition();
+// Function to play the audio and log the action
+function playAudio(audio, label) {
+    if (!audio) {
+        console.error("Audio not found for:", label);
         return;
     }
 
-    const audio = queue.shift();
+    console.log(`Playing audio for: ${label}`);
     audio.currentTime = 0;
 
     audio.play()
         .then(() => {
-            console.log("Playing audio:", audio.src);
+            console.log(`Audio playing: ${label}`);
         })
         .catch(error => {
-            console.error("Error playing audio:", error);
+            console.error(`Error playing audio: ${label}`, error);
         });
-
-    audio.onended = () => playAudioQueue(queue);
 }
 
+// Start listening when the page loads
 window.onload = initSpeechRecognition;
