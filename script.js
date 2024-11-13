@@ -29,14 +29,14 @@ function initSpeechRecognition() {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log("Transcript detected:", transcript);
 
-        // Clear the previous pause timer if new input is detected
+        // Clear any existing pause timer
         clearTimeout(pauseTimer);
 
-        // Start a new pause timer for 1.5 seconds
+        // Start a timer for a 1.5-second pause
         pauseTimer = setTimeout(() => {
             recognition.stop();
             detectEmotionAndRespond(transcript);
-        }, 1500); // 1.5-second pause
+        }, 1500);
     };
 
     recognition.onerror = (event) => {
@@ -60,21 +60,67 @@ function restartRecognition() {
     }, 500);
 }
 
-// Analyze text and play corresponding audio
+// Detect emotions and respond with appropriately timed audio
 function detectEmotionAndRespond(text) {
+    const durations = getEmotionDurations(text);
     const audioQueue = [];
 
-    if (/hi|hello|hey/.test(text)) audioQueue.push(audios.greeting);
-    if (/angry|furious|rage/.test(text)) audioQueue.push(audios.aggressive);
-    if (/defensive|insecure|small/.test(text)) audioQueue.push(audios.defensive);
-    if (/flirt|sexy|beautiful/.test(text)) audioQueue.push(audios.flirtatious);
-    if (/care|nurture|mother/.test(text)) audioQueue.push(audios.motherly);
-    if (/danger|protest|threat/.test(text)) audioQueue.push(audios.danger);
-    if (/scared|terrified|petrified/.test(text)) audioQueue.push(audios.terrified);
-    if (/territory|mine|protect/.test(text)) audioQueue.push(audios.territorial);
+    // Prepare audio responses based on detected emotions and durations
+    for (const [emotion, duration] of Object.entries(durations)) {
+        const audio = audios[emotion];
+        if (audio) {
+            const adjustedAudio = adjustAudioDuration(audio, duration);
+            audioQueue.push(adjustedAudio);
+        }
+    }
 
-    // Play the audio sequence
     playAudioQueue(audioQueue);
+}
+
+// Analyze text and estimate durations for each emotion
+function getEmotionDurations(text) {
+    const words = text.split(" ");
+    const totalWords = words.length;
+
+    const emotions = {
+        greeting: /hi|hello|hey/,
+        aggressive: /angry|furious|rage/,
+        defensive: /defensive|insecure|small/,
+        flirtatious: /flirt|sexy|beautiful/,
+        motherly: /care|nurture|mother/,
+        danger: /danger|protest|threat/,
+        terrified: /scared|terrified|petrified/,
+        territorial: /territory|mine|protect/
+    };
+
+    const durations = {};
+
+    for (const [emotion, regex] of Object.entries(emotions)) {
+        const matchedWords = words.filter(word => regex.test(word)).length;
+        const duration = (matchedWords / totalWords) * getTotalDuration(text);
+        if (duration > 0) durations[emotion] = duration;
+    }
+
+    return durations;
+}
+
+// Estimate the total duration of the speech in seconds
+function getTotalDuration(text) {
+    const wordsPerMinute = 130; // Average speaking rate
+    const totalWords = text.split(" ").length;
+    return (totalWords / wordsPerMinute) * 60;
+}
+
+// Adjust the audio duration by changing its playback rate
+function adjustAudioDuration(audio, duration) {
+    const originalDuration = audio.duration;
+    
+    // Adjust playback rate to fit the desired duration
+    if (originalDuration > 0) {
+        audio.playbackRate = originalDuration / duration;
+    }
+
+    return audio;
 }
 
 // Play the queued audio files sequentially
