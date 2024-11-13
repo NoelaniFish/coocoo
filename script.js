@@ -13,7 +13,7 @@ function preloadAudios() {
     territorialSoftAudio = new Audio('territorial-soft.mp3');
 }
 
-// Load the audio files on page load
+// Preload audio files
 preloadAudios();
 
 function initSpeechRecognition() {
@@ -23,8 +23,8 @@ function initSpeechRecognition() {
     }
     
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = false; // Stop when you stop speaking
-    recognition.interimResults = false; // Only process the final result
+    recognition.continuous = false;
+    recognition.interimResults = false;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
@@ -35,21 +35,24 @@ function initSpeechRecognition() {
         const transcript = event.results[0][0].transcript.toLowerCase();
         document.getElementById('transcript').innerText = `You said: ${transcript}`;
         handleSpeechInput(transcript);
+        setTimeout(() => recognition.start(), 500); // Restart listening after processing
     };
 
     recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
+        setTimeout(() => recognition.start(), 500); // Restart on error
     };
 
     recognition.onend = () => {
-        document.getElementById('transcript').innerText = "Speak to the bot...";
+        setTimeout(() => recognition.start(), 500); // Restart when speech ends
     };
+
+    recognition.start(); // Automatically start listening
 }
 
 function handleSpeechInput(text) {
     let audioQueue = [];
 
-    // Check for various emotional tones and queue the corresponding audio
     if (text.includes("hi") || text.includes("hello") || text.includes("hey")) {
         audioQueue.push(greetingAudio);
     }
@@ -75,7 +78,6 @@ function handleSpeechInput(text) {
         audioQueue.push(territorialSoftAudio);
     }
 
-    // Play the queued audio files one after the other
     playAudioQueue(audioQueue);
 }
 
@@ -91,9 +93,5 @@ function playAudioQueue(queue) {
     };
 }
 
-// Start speech recognition on button click
-document.getElementById('start-btn').addEventListener('click', () => {
-    recognition.start();
-});
-
-initSpeechRecognition();
+// Automatically start speech recognition when the page loads
+window.onload = initSpeechRecognition;
