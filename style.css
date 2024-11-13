@@ -10,15 +10,20 @@ body {
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-color: #000000; /* Pure black background */
+    background-color: #000000; /* Black background */
     font-family: 'Helvetica', sans-serif;
-    color: #FFFFFF; /* Pure white text */
+    color: #FFFFFF; /* White text */
+    transition: filter 0.3s ease; /* Smooth transition for color inversion */
+}
+
+body.inverted {
+    filter: invert(1) hue-rotate(180deg); /* Invert colors */
 }
 
 .container {
     text-align: center;
     padding: 40px;
-    border-radius: 20px; /* Rounded corners */
+    border-radius: 20px;
     max-width: 600px;
     width: 100%;
     background-color: #1A1A1A; /* Slightly lighter black for the container */
@@ -29,14 +34,14 @@ h1 {
     font-size: 32px;
     margin-bottom: 20px;
     color: #00FFCC; /* Teal accent for the title */
-    font-style: italic; /* Italics for "PIGEON TRANSLATION" */
+    font-style: italic;
 }
 
 p#transcript {
     font-size: 20px;
     margin-top: 20px;
     padding: 20px;
-    background-color: #333333; /* Dark gray for the transcript background */
+    background-color: #333333;
     border-radius: 15px;
     box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.3);
 }
