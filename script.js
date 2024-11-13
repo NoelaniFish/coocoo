@@ -31,37 +31,38 @@ function initSpeechRecognition() {
         statementStartTime = new Date().getTime();
     };
 
-    recognition.onresult = (event) => {
-        statementEndTime = new Date().getTime();
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        const confidence = event.results[0][0].confidence;
+    
+      recognition.onresult = (event) => {
+    statementEndTime = new Date().getTime();
+    const transcript = event.results[0][0].transcript.toLowerCase();
+    const confidence = event.results[0][0].confidence;
+    const transcriptLength = transcript.trim().length;
 
-        console.log("Transcript:", transcript);
-        console.log("Confidence:", confidence);
+    console.log("Transcript:", transcript);
+    console.log("Confidence:", confidence);
 
-        if (confidence > 0.7) { // Increase confidence threshold to filter out noise
-            const duration = (statementEndTime - statementStartTime) / 1000;
-            categorizeAndRespond(transcript, duration);
-        } else {
-            console.log("Low confidence, defaulting to greeting.");
-            playAudioForDuration(audios.greeting, 2);
-        }
-    };
+    // Only respond if confidence is high and speech is long enough
+    if (confidence > 0.7 && transcriptLength > 10) {
+        const duration = (statementEndTime - statementStartTime) / 1000;
+        categorizeAndRespond(transcript, duration);
+    } else {
+        console.log("Ignored due to low confidence or short input.");
+    }
+};
 
-    recognition.onspeechend = () => {
-        console.log("User stopped speaking.");
-        recognition.stop(); // Stop listening after speech ends
-    };
-
-    recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
+recognition.onspeechend = () => {
+    const speechDuration = (statementEndTime - statementStartTime) / 1000;
+    if (speechDuration < 1.5) {
+        console.log("Speech too short, ignoring.");
+        recognition.stop();
         restartRecognition();
-    };
-
-    recognition.onend = () => {
-        console.log("Recognition ended.");
-        restartRecognition();
-    };
+        return;
+    }
+    console.log("User stopped speaking.");
+    recognition.stop();
+    statusText.textContent = "Not Listening";
+    statusText.classList.remove('listening');
+};
 
     recognition.start();
 }
