@@ -61,42 +61,61 @@ function initSpeechRecognition() {
     };
 }
 
-// Updated categorization with enhanced keywords
+// Comprehensive keyword list for each category
+const keywords = {
+    motherly: [
+        "calm", "love", "support", "hug", "I love you", "marry me", "chosen family", "love of my life", 
+        "you mean the world", "you’re my everything", "soft heart", "I’m here for you", "family", "pets", 
+        "rest up", "self-care", "zen", "grounded", "platonic love", "best friend", "squad", "fam", "safe", 
+        "comforting", "breathe", "sunshine", "nature", "tree", "forest", "beach", "river", "sunset", 
+        "flowers", "meadow", "doggo", "cat", "horse", "farm", "back home", "mother", "father", "sister", 
+        "brother", "aunt", "uncle", "grandpa", "child", "daughter", "son", "toddler", "funny", "hilarious",
+        "adopt", "rescue", "furry", "meow", "home sweet home", "empathy", "thoughtful", "cherish", 
+        "bestie", "mommy", "mama", "daddy"
+    ],
+    aggressive: [
+        "tear", "destroy", "rage", "cancel", "hate", "fuck no", "I hate you", "disgust me", "burn it down", 
+        "wreck", "violence", "fight me", "alpha", "dominance", "stomp", "explode", "fuck off", "pissed", 
+        "clap back", "annoying", "toxic", "triggered", "angry", "furious", "revenge", "bulldoze", 
+        "smash", "curse", "fury", "crush"
+    ],
+    defensive: [
+        "me", "myself", "stop", "scared", "why is this happening", "oh no", "leave me alone", 
+        "I didn’t mean it", "overwhelmed", "insecure", "lost", "not good enough", "hurt", "judgment", 
+        "misunderstood", "defensive", "paranoid", "annoying", "ugly", "I’m trying my best"
+    ],
+    flirtatious: [
+        "cute", "fun", "flirt", "crush", "simp", "bae", "hot", "lesbian", "gay", "sapphic", "mlm", 
+        "you look great", "gorgeous", "sexy", "stunning", "fingering", "blowjob", "glory hole", "eating out",
+        "penetration", "handjob", "rimming", "goldstar", "hey mamas", "twink", "butch", "futch", "femme", 
+        "cookie", "loving", "horny", "wink", "darling", "kiss", "sweetie", "you’re breathtaking"
+    ],
+    danger: [
+        "danger", "alert", "red flag", "watch out", "run", "be careful", "suspicious", "creepy", 
+        "get out", "evacuate", "high alert", "hazardous", "trap", "brace yourself", "beware", "caution", 
+        "threat level", "sketchy", "secure the area"
+    ],
+    terrified: [
+        "freaking out", "shaking", "scared", "panic", "help me", "dread", "terrified", "I can’t breathe", 
+        "haunted", "losing it", "nightmare", "heart racing", "crying", "paralyzed with fear", 
+        "distress", "horror", "freaky", "spooked", "hyperventilating", "anxiety", "I’m trembling"
+    ]
+};
+
+// Function to categorize and respond based on keywords
 function categorizeAndRespond(text, duration) {
-    let audio;
+    let audio = audios.greeting;
 
-    // **Motherly / Nurturing / Everyday Man Speak**
-    if (/\b(calm|love|support|peace|gentle|sweet|comfort|home|supportive|hug|take it easy|you’ve got this|rest up|let’s catch up|no worries|it’s all good|I’m here for you|take care|don’t stress it|hang in there|you’re doing great|you’ve got my support|just relax|you’re safe|I’m proud of you|focus on yourself|just breathe)\b/.test(text)) {
-        audio = audios.motherly;
-
-    // **Aggressive / Angry / Everyday Man Speak**
-    } else if (/\b(tear|destroy|rage|fight|cancel culture|toxic | piss|pissed off|fed up|cut it out|I’m over it|mind your business|get lost|stop it now|you crossed the line|that’s enough|you’ve gone too far|stay out of my way|enough is enough|get a grip|back off|I’ve had it with you|don’t mess with me|I’m done with this)\b/.test(text)) {
-        audio = audios.aggressive;
-
-    // **Defensive / Insecure / Everyday Man Speak**
-    } else if (/\b(me|myself|stop|defend|I’m scared|that’s not fair|you don’t understand|why me?|I’m trying my best|please don’t judge me|I didn’t mean it|I don’t know what else to do|why is this always happening to me?|I’m not wrong|I don’t belong here|I feel lost|why are you blaming me?|I’m doing my best)\b/.test(text)) {
-        audio = audios.defensive;
-
-    // **Flirtatious / Playful / Everyday Man Speak**
-    } else if (/\b(eyes|smile|love|cute|fun|flirt|crush|bae|you look great|nice to see you|we should hang out|let’s grab a drink|you’ve got great vibes|I can’t stop thinking about you|I love your smile|you’re fun to be around|let’s do this again|you light up the room|you’re really cool|I’ve got a crush on you|you’re so easy to talk to)\b/.test(text)) {
-        audio = audios.flirtatious;
-
-    // **Potential Danger / Warning / Everyday Man Speak**
-    } else if (/\b(danger|alert|run|red flag|be careful|get out|watch out|stay safe|this isn’t good|take cover|it’s not safe|hold up|heads up|stay alert|back away|don’t go there|that’s risky|get away|this could get bad|it’s a trap|look out)\b/.test(text)) {
-        audio = audios.danger;
-
-    // **Terrified / Fear / Everyday Man Speak**
-    } else if (/\b(freaking out|shaking|scared|panic|help me|dread|I’m losing it|terrified|I’m so scared|I’m not okay|I can’t breathe|I’m freaking out|I feel paralyzed|I’m about to lose it|this is too much|I’m having a meltdown|my heart is racing|I’m not sure what to do|I feel trapped|I’m panicking)\b/.test(text)) {
-        audio = audios.terrified;
-
-    } else {
-        audio = audios.greeting;
+    for (const [category, words] of Object.entries(keywords)) {
+        if (words.some(word => text.includes(word))) {
+            audio = audios[category];
+            break;
+        }
     }
 
     playAudioForDuration(audio, duration);
 }
 
-// Play audio for specified duration
 function playAudioForDuration(audio, duration) {
     audio.currentTime = 0;
     audio.play();
@@ -105,18 +124,8 @@ function playAudioForDuration(audio, duration) {
     }, duration * 1000);
 }
 
-// Event listeners for mouse clicks
 document.addEventListener('mousedown', () => {
     if (!recognition?.started) {
         initSpeechRecognition();
         recognition.start();
-        recognition.started = true;
-    }
-});
-
-document.addEventListener('mouseup', () => {
-    if (recognition?.started) {
-        recognition.stop();
-        recognition.started = false;
-    }
-});
+        r
