@@ -39,7 +39,7 @@ function initSpeechRecognition() {
         console.log("Transcript:", transcript);
         console.log("Confidence:", confidence);
 
-        if (confidence > 0.5) {
+        if (confidence > 0.7) { // Increase confidence threshold to filter out noise
             const duration = (statementEndTime - statementStartTime) / 1000;
             categorizeAndRespond(transcript, duration);
         } else {
@@ -49,7 +49,8 @@ function initSpeechRecognition() {
     };
 
     recognition.onspeechend = () => {
-        recognition.stop();
+        console.log("User stopped speaking.");
+        recognition.stop(); // Stop listening after speech ends
     };
 
     recognition.onerror = (event) => {
@@ -59,12 +60,13 @@ function initSpeechRecognition() {
 
     recognition.onend = () => {
         console.log("Recognition ended.");
+        restartRecognition();
     };
 
     recognition.start();
 }
 
-// Restart recognition
+// Restart recognition after a delay
 function restartRecognition() {
     setTimeout(() => {
         try {
@@ -72,58 +74,52 @@ function restartRecognition() {
         } catch (error) {
             console.error("Error restarting recognition:", error);
         }
-    }, 1000);
+    }, 1500); // Slight delay to prevent picking up its own audio
 }
 
-// Categorize speech and respond
+// Categorize speech and respond with refined keywords
 function categorizeAndRespond(text, duration) {
     let audio;
 
     // **Greeting (Coo-Greeting)**
-    if (/hi|hello|hey|good day| goin | honey | pookie |  sweetie | hows it | dawn | misty |  weather |  hows the |  miss you | nice to see you | bye | see ya | morning | afternoon| goodnight | night | pleasure to meet|greetings|how do you fare|lovely to see|salutations|well met|peace upon you|farewell|take care|goodbye| may joy accompany/.test(text)) {
+    if (/\b(hi|hello|hey|good day|honey|pookie|sweetie|how’s it|dawn|goodnight|pleasure|greetings|farewell|take care|goodbye|miss you)\b/.test(text)) {
         audio = audios.greeting;
 
     // **Motherly-Nurturing**
-    } else if (/calm|green|bloom|growing| care |  i care |  i love |  how are |  are you |  are you really |  i really do |  sound of |  family |  friend |  friendship| peace |  gentle|  nice |  kind |  sweet|  funny| hilzarious|  weird|  musical| community | mutual| mutual aid |  aid|  help|  helping |  helping hand |  sacrafice|   beautiful| sunset|morning light|gentle rain|home|hug|support|laughter|family|bond|forever|best friend|chill|bond/.test(text) ||
-               /peaceful|trees feel alive| sledding | snow man |  snow |  ice |  snowflake | sun | moon |  warmth | warm |  cold cool | cool | cold | alive | cats| cat| dog| lizard | chicken| farm | home | hometown | goats| horses | sheep| cows|  trees| beach|  ocean|  land| outside |  nature|  grass | winter |  fall| summer | spring|  autumn |  leaves | mother |  father |  mom|  dad|  sister |  brother |  cousin|  aunt |  uncle | grandpa| grandma | second | third | first | deal | brgain | religion | christian | jewish | catholic|baptistc|buddhist| pets| smell of rain|boo | sunset is like a deep breath|sound of waves|you’re my rock|family sticks together|proud of you/.test(text)) {
+    } else if (/\b(calm|care|love|family|friend|support|laughter|sunset|nature|peaceful|hometown|pets|help|warmth|gentle|kind|funny)\b/.test(text)) {
         audio = audios.motherly;
 
     // **Aggressive-Territorial**
-    } else if (/tear|bruise|knock|beatdown|ugh | don't | break|stomp|wreck|regret|crush|burn|stain|smash|cut|death|bury|blood|fire|threat/.test(text) ||
-               /tear you apart|mess you up|six feet under|fuck |  cunt|  bitch |  dyke |  faggot | pussy | break your jaw|send you to the afterlife|you’re dead meat|barking up the wrong tree/.test(text)) {
+    } else if (/\b(tear|bruise|knock|beatdown|break|stomp|crush|burn|fire|fuck|bitch|pussy|kill|threat)\b/.test(text)) {
         audio = audios.aggressive;
 
     // **Defensive**
-    } else if (/me|myself|why are you attacking me|stop| know| mean| ugly| go away| I’m not wrong|you don’t understand me|that’s not what I meant|I didn’t do anything wrong|stop blaming me|I’m doing my best/.test(text)) {
+    } else if (/\b(me|myself|attack|blame|wrong|understand|stop|ugly|I’m trying|not fair|judge|I’m doing my best)\b/.test(text)) {
         audio = audios.defensive;
 
     // **Flirtatious**
-    } else if (/eyes|smile|wink|connection|charm|ate pussy |  ate box| ate out | fingered her|  blow job | glory hole |  sixty nine|  69| love| lust| horny| erection|  hard on |  come |  coming|  cum |  ejaculation| blush|cute|talk|listen|type|vibe|party|dance|grind|hook up|sex|best friend|hang out|energy|fun|laugh/.test(text) ||
-               /I can’t stop looking at you|you’re making it hard|see you| we’ve got a connection|you’re just my type|I love the way you laugh/.test(text)) {
+    } else if (/\b(eyes|smile|charm|sex|love|party|dance|flirt|hook up|cute|fun|laugh)\b/.test(text)) {
         audio = audios.flirtatious;
 
     // **Potential Danger**
-    } else if (/watch out|heads up|look out|careful|alert| R rated |  Trump |  President Trump | Donald Trump | they're coming now | im terrified | horror|  something is gonna happen |  gonna | premonition| ouija | crazy | danger|trap|run|stop|stay away|get out|back off|not safe|keep your distance/.test(text)) {
+    } else if (/\b(watch out|careful|danger|alert|run|trap|stay away|get out|not safe|keep distance)\b/.test(text)) {
         audio = audios.danger;
 
     // **Terrified**
-    } else if (/freaking|shaking|trembling|paralyzed|scared|ahhhhhh| ahh| no | freaky|  scary| piss myself | pissy| fucking| terrified|panic|nightmare|shock|control|heart racing|sick|breathe|fear/.test(text) ||
-               /I’m freaking out|I’m losing it| losing | loser | paralyse| scare| I feel paralyzed|I’m scared to death|my heart is racing|I’m about to pass out/.test(text)) {
+    } else if (/\b(freaking|shaking|trembling|paralyzed|scared|terrified|panic|nightmare|shock|control|heart racing|breathe)\b/.test(text)) {
         audio = audios.terrified;
 
     // **Territorial-Soft**
-    } else if (/mine|hands off|dibs|space|territory|spot|claim|turf| you're mine |  she's mine |  he's mine |  they're mine | babe | honey| pookie | protect|right|touch|staked|first|budging/.test(text) ||
-               /that’s mine|I called it first|don’t touch what’s not yours|this is my territory|I’ve staked my claim/.test(text)) {
+    } else if (/\b(mine|hands off|space|territory|claim|turf|protect|right|belong|first)\b/.test(text)) {
         audio = audios.territorial;
     }
 
-    // Play the detected audio response
     if (audio) {
         playAudioForDuration(audio, duration);
     }
 }
 
-// Play audio for specified duration
+// Play the audio for the specified duration
 function playAudioForDuration(audio, duration) {
     audio.currentTime = 0;
     audio.play();
@@ -133,5 +129,5 @@ function playAudioForDuration(audio, duration) {
     }, duration * 1000);
 }
 
-// Start listening when the page loads
+// Start listening on page load
 window.onload = initSpeechRecognition;
