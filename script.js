@@ -32,6 +32,11 @@ function initSpeechRecognition() {
     recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log("Transcript detected:", transcript);
+recognition.onresult = (event) => {
+    const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+    console.log("Transcript detected:", transcript);
+    document.getElementById('status').textContent = `Heard: ${transcript}`;
+};
 
         // Clear any existing pause timer
         clearTimeout(pauseTimer);
