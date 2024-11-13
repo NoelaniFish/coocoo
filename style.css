@@ -12,45 +12,30 @@ body {
     height: 100vh;
     background-color: #000000; /* Black background */
     color: #FFFFFF; /* White text */
-    font-family: 'Helvetica', 'ITALIC', sans-serif;
+    font-family: 'Helvetica', sans-serif; /* Clean font */
 }
 
 .container {
     text-align: center;
-    padding: 30px;
-    border-radius: 20px; /* Rounded corners */
+    padding: 20px;
+    border-radius: 15px;
     background-color: #1a1a1a; /* Slightly lighter black */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
     max-width: 600px;
     width: 90%;
 }
 
-h1 {
-    font-size: 28px;
+.title {
+    font-style: italic;          /* Italic text */
+    text-transform: uppercase;   /* All caps */
+    color: #00FFCC;             /* Teal accent color */
     margin-bottom: 20px;
-    color: #FFFFFF; /* Teal accent for the title */
 }
 
-p#status {
+#status {
     font-size: 18px;
-    margin-bottom: 20px;
-    background-color: #333;
-    padding: 15px;
+    margin-top: 15px;
+    background-color: #333333;
+    padding: 10px;
     border-radius: 10px;
-    color: #FFFFFF;
-}
-
-button {
-    background-color: #00FFCC;
-    color: #000;
-    border: none;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #009977;
 }
