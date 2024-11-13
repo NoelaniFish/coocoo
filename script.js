@@ -21,13 +21,14 @@ function initSpeechRecognition() {
         alert("Your browser does not support speech recognition. Please use Chrome.");
         return;
     }
-    
+
     recognition = new webkitSpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
+        document.body.classList.add('inverted'); // Invert colors when listening
         document.getElementById('transcript').innerText = "Listening...";
     };
 
@@ -35,7 +36,7 @@ function initSpeechRecognition() {
         const transcript = event.results[0][0].transcript.toLowerCase();
         document.getElementById('transcript').innerText = `You said: ${transcript}`;
         handleSpeechInput(transcript);
-        setTimeout(() => recognition.start(), 500); // Restart listening after processing
+        setTimeout(() => recognition.start(), 500); // Restart listening
     };
 
     recognition.onerror = (event) => {
@@ -44,7 +45,8 @@ function initSpeechRecognition() {
     };
 
     recognition.onend = () => {
-        setTimeout(() => recognition.start(), 500); // Restart when speech ends
+        document.body.classList.remove('inverted'); // Revert colors when not listening
+        setTimeout(() => recognition.start(), 500); // Restart listening
     };
 
     recognition.start(); // Automatically start listening
@@ -93,5 +95,4 @@ function playAudioQueue(queue) {
     };
 }
 
-// Automatically start speech recognition when the page loads
 window.onload = initSpeechRecognition;
