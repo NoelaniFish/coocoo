@@ -1,6 +1,6 @@
 let recognition;
 let pauseTimer = null;
-const statusElement = document.getElementById('status');
+let statementCount = 0; // Tracks the number of statements to determine early vs. general responses
 
 // Load the audio files
 const audios = {
@@ -26,14 +26,11 @@ function initSpeechRecognition() {
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => {
-        statusElement.textContent = "Listening...";
-    };
+    recognition.onstart = () => console.log("Listening...");
 
     recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
         console.log("Transcript detected:", transcript);
-        statusElement.textContent = "Processing...";
 
         // Clear any existing pause timer
         clearTimeout(pauseTimer);
@@ -47,14 +44,10 @@ function initSpeechRecognition() {
 
     recognition.onerror = (event) => {
         console.error("Error:", event.error);
-        statusElement.textContent = "Error occurred. Restarting...";
         restartRecognition();
     };
 
-    recognition.onend = () => {
-        statusElement.textContent = "Waiting for you to speak...";
-        restartRecognition();
-    };
+    recognition.onend = () => restartRecognition();
 
     recognition.start();
 }
@@ -70,17 +63,43 @@ function restartRecognition() {
     }, 500);
 }
 
-// Detect emotions and respond with appropriately timed audio
+// Detect emotions and respond with the appropriate audio or default
 function detectEmotionAndRespond(text) {
-    statusElement.textContent = "Analyzing emotions...";
-    const durations = getEmotionDurations(text);
+    statementCount++; // Increase statement count with each response
     const audioQueue = [];
 
-    for (const [emotion, duration] of Object.entries(durations)) {
-        const audio = audios[emotion];
-        if (audio) {
-            const adjustedAudio = adjustAudioDuration(audio, duration);
-            audioQueue.push(adjustedAudio);
+    // Check for specific emotional cues
+    if (/hi|hello|hey/.test(text)) {
+        audioQueue.push(audios.greeting);
+    }
+    if (/angry|furious|rage/.test(text)) {
+        audioQueue.push(audios.aggressive);
+    }
+    if (/defensive|insecure|small/.test(text)) {
+        audioQueue.push(audios.defensive);
+    }
+    if (/flirt|sexy|beautiful/.test(text)) {
+        audioQueue.push(audios.flirtatious);
+    }
+    if (/care|nurture|mother/.test(text)) {
+        audioQueue.push(audios.motherly);
+    }
+    if (/danger|protest|threat/.test(text)) {
+        audioQueue.push(audios.danger);
+    }
+    if (/scared|terrified|petrified/.test(text)) {
+        audioQueue.push(audios.terrified);
+    }
+    if (/territory|mine|protect/.test(text)) {
+        audioQueue.push(audios.territorial);
+    }
+
+    // Default audio responses for ambiguous statements
+    if (audioQueue.length === 0) {
+        if (statementCount <= 1) {
+            audioQueue.push(audios.greeting); // Early statement: use greeting
+        } else {
+            audioQueue.push(audios.motherly); // General: use motherly
         }
     }
 
@@ -90,7 +109,6 @@ function detectEmotionAndRespond(text) {
 // Play the queued audio files sequentially
 function playAudioQueue(queue) {
     if (queue.length === 0) {
-        statusElement.textContent = "Waiting for you to speak...";
         restartRecognition();
         return;
     }
