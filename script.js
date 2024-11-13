@@ -1,5 +1,6 @@
 let recognition;
 let statementStartTime, statementEndTime;
+const statusText = document.getElementById('status');
 
 // Load audio files
 const audios = {
@@ -27,79 +28,86 @@ function initSpeechRecognition() {
 
     recognition.onstart = () => {
         console.log("Listening...");
-        document.getElementById('status').textContent = "Listening...";
+        statusText.textContent = "Listening...";
+        statusText.classList.add('listening');
         statementStartTime = new Date().getTime();
     };
 
-    
-      recognition.onresult = (event) => {
-    statementEndTime = new Date().getTime();
-    const transcript = event.results[0][0].transcript.toLowerCase();
-    const confidence = event.results[0][0].confidence;
-    const transcriptLength = transcript.trim().length;
+    recognition.onresult = (event) => {
+        statementEndTime = new Date().getTime();
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const confidence = event.results[0][0].confidence;
+        const transcriptLength = transcript.trim().length;
 
-    console.log("Transcript:", transcript);
-    console.log("Confidence:", confidence);
+        console.log("Transcript:", transcript);
+        console.log("Confidence:", confidence);
 
-    // Only respond if confidence is high and speech is long enough
-    if (confidence > 0.7 && transcriptLength > 10) {
-        const duration = (statementEndTime - statementStartTime) / 1000;
-        categorizeAndRespond(transcript, duration);
-    } else {
-        console.log("Ignored due to low confidence or short input.");
-    }
-};
-
-recognition.onspeechend = () => {
-    const speechDuration = (statementEndTime - statementStartTime) / 1000;
-    if (speechDuration < 1.5) {
-        console.log("Speech too short, ignoring.");
-        recognition.stop();
-        restartRecognition();
-        return;
-    }
-    console.log("User stopped speaking.");
-    recognition.stop();
-    statusText.textContent = "Not Listening";
-    statusText.classList.remove('listening');
-};
-
-    recognition.start();
-}
-
-// Restart recognition after a delay
-function restartRecognition() {
-    setTimeout(() => {
-        try {
-            recognition.start();
-        } catch (error) {
-            console.error("Error restarting recognition:", error);
+        // Only respond if confidence is high and speech is long enough
+        if (confidence > 0.7 && transcriptLength > 10) {
+            const duration = (statementEndTime - statementStartTime) / 1000;
+            categorizeAndRespond(transcript, duration);
+        } else {
+            console.log("Ignored due to low confidence or short input.");
         }
-    }, 1500); // Slight delay to prevent picking up its own audio
+    };
+
+    recognition.onspeechend = () => {
+        const speechDuration = (statementEndTime - statementStartTime) / 1000;
+        if (speechDuration < 1.5) {
+            console.log("Speech too short, ignoring.");
+        }
+        recognition.stop();
+        statusText.textContent = "Not Listening";
+        statusText.classList.remove('listening');
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+    };
+
+    recognition.onend = () => {
+        console.log("Recognition ended.");
+    };
 }
 
-// Categorize speech and respond with refined keywords
+// Start recognition when spacebar is pressed
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space' && !recognition?.started) {
+        initSpeechRecognition();
+        recognition.start();
+        recognition.started = true;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    if (event.code === 'Space') {
+        recognition.stop();
+        recognition.started = false;
+    }
+});
+
+// Categorize speech and respond
 function categorizeAndRespond(text, duration) {
     let audio;
 
     // **Greeting (Coo-Greeting)**
-    if (/\b(hi|hello|hey|good day|honey|pookie|sweetie|how’s it|dawn|goodnight|pleasure|greetings|farewell|take care|goodbye|miss you)\b/.test(text)) {
+    if (/\b(hi|hello|hey|good day|honey|sweetie|how’s it|goodnight|pleasure|greetings|farewell|take care|goodbye|miss you)\b/.test(text)) {
         audio = audios.greeting;
 
     // **Motherly-Nurturing**
-    } else if (/\b(calm|care|love|family|friend|support|laughter|sunset|nature|peaceful|hometown|pets|help|warmth|gentle|kind|funny)\b/.test(text)) {
+    } else if (/\b(calm|care|love|family|friend|support|laughter|sunset|nature|peaceful|warmth|gentle|kind)\b/.test(text)) {
         audio = audios.motherly;
 
     // **Aggressive-Territorial**
-    } else if (/\b(tear|bruise|knock|beatdown|break|stomp|crush|burn|fire|fuck|bitch|pussy|kill|threat)\b/.test(text)) {
+    } else if (/\b(tear|bruise|knock|beatdown|break|stomp|crush|burn|fire|threat|fuck|bitch|pussy|kill)\b/.test(text)) {
         audio = audios.aggressive;
 
     // **Defensive**
-    } else if (/\b(me|myself|attack|blame|wrong|understand|stop|ugly|I’m trying|not fair|judge|I’m doing my best)\b/.test(text)) {
+    } else if (/\b(me|myself|attack|blame|wrong|understand|stop|ugly|I’m trying|judge|I’m doing my best)\b/.test(text)) {
         audio = audios.defensive;
 
     // **Flirtatious**
-    } else if (/\b(eyes|smile|charm|sex|love|party|dance|flirt|hook up|cute|fun|laugh)\b/.test(text)) {
+    } else if (/\b(eyes|smile|charm|love|party|dance|flirt|hook up|cute|fun|laugh|sexy|vibe)\b/.test(text)) {
         audio = audios.flirtatious;
 
     // **Potential Danger**
@@ -107,11 +115,11 @@ function categorizeAndRespond(text, duration) {
         audio = audios.danger;
 
     // **Terrified**
-    } else if (/\b(freaking|shaking|trembling|paralyzed|scared|terrified|panic|nightmare|shock|control|heart racing|breathe)\b/.test(text)) {
+    } else if (/\b(freaking|shaking|trembling|paralyzed|scared|terrified|panic|nightmare|shock|breathe|fear)\b/.test(text)) {
         audio = audios.terrified;
 
     // **Territorial-Soft**
-    } else if (/\b(mine|hands off|space|territory|claim|turf|protect|right|belong|first)\b/.test(text)) {
+    } else if (/\b(mine|hands off|space|territory|claim|protect|right|belong|first|turf)\b/.test(text)) {
         audio = audios.territorial;
     }
 
@@ -126,9 +134,5 @@ function playAudioForDuration(audio, duration) {
     audio.play();
     setTimeout(() => {
         audio.pause();
-        restartRecognition();
     }, duration * 1000);
 }
-
-// Start listening on page load
-window.onload = initSpeechRecognition;
