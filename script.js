@@ -102,7 +102,7 @@ function playAudioForDuration(audio, duration) {
     }, duration * 1000);
 }
 
-// Event listeners for mouse click
+// Event listeners for mouse clicks
 document.addEventListener('mousedown', () => {
     if (!recognition?.started) {
         initSpeechRecognition();
