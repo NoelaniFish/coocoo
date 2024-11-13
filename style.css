@@ -28,7 +28,7 @@ body {
 .title {
     font-style: italic;          /* Italic text */
     text-transform: uppercase;   /* All caps */
-    color: #FFFFFF;             /* Teal accent color */
+    color: #FFFFFF;            
     margin-bottom: 20px;
 }
 
