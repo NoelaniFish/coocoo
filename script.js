@@ -69,7 +69,7 @@ const keywords = {
         "you mean the world", "you’re my everything", "soft heart", "I’m here for you", "family", "pets", 
         "rest up", "self-care", "zen", "grounded", "platonic love", "best friend", "squad", "fam", "safe", 
         "comforting", "breathe", "sunshine", "nature", "tree", "forest", "beach", "river", "sunset", 
-        "flowers", "meadow", "doggo", "cat", "horse", "farm", "back home", "mother", "father", "sister", 
+        "flowers", "meadow", "doggo", "cat", "mom", "dad", "sis" "bro", "pal", "horse", "farm", "back home", "mother", "father", "sister", 
         "brother", "aunt", "uncle", "grandpa", "child", "daughter", "son", "toddler", "funny", "hilarious",
         "adopt", "rescue", "furry", "meow", "home sweet home", "empathy", "thoughtful", "cherish", 
         "bestie", "mommy", "mama", "daddy"
@@ -78,18 +78,18 @@ const keywords = {
         "tear", "destroy", "rage", "cancel", "hate", "fuck no", "I hate you", "disgust me", "burn it down", 
         "wreck", "violence", "fight me", "alpha", "dominance", "stomp", "explode", "fuck off", "pissed", 
         "clap back", "annoying", "toxic", "triggered", "angry", "furious", "revenge", "bulldoze", 
-        "smash", "curse", "fury", "crush"
+        "smash", "curse", "fury", "crush", "ugh", "ahh", "eee", "errr" 
     ],
     defensive: [
         "me", "myself", "stop", "scared", "why is this happening", "oh no", "leave me alone", 
         "I didn’t mean it", "overwhelmed", "insecure", "lost", "not good enough", "hurt", "judgment", 
-        "misunderstood", "defensive", "paranoid", "annoying", "ugly", "I’m trying my best"
+        "misunderstood", "defensive", "paranoid", "annoying", "ugly", "I’m trying my best", "no"
     ],
     flirtatious: [
         "cute", "fun", "flirt", "crush", "simp", "bae", "hot", "lesbian", "gay", "sapphic", "mlm", 
         "you look great", "gorgeous", "sexy", "stunning", "fingering", "blowjob", "glory hole", "eating out",
         "penetration", "handjob", "rimming", "goldstar", "hey mamas", "twink", "butch", "futch", "femme", 
-        "cookie", "loving", "horny", "wink", "darling", "kiss", "sweetie", "you’re breathtaking"
+        "cookie", "loving", "horny", "wink", "darling", "kiss", "sweetie", "you’re breathtaking", "sex", "gorgeous", "pretty", "stunning", "beautiful"
     ],
     danger: [
         "danger", "alert", "red flag", "watch out", "run", "be careful", "suspicious", "creepy", 
