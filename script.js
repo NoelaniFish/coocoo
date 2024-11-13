@@ -13,26 +13,29 @@ const audios = {
     territorial: new Audio('territorial-soft.mp3')
 };
 
-// Function to initialize speech recognition
+// Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
-        alert("Your browser does not support speech recognition. Please use Google Chrome.");
+        alert("Please use Google Chrome for this feature.");
         return;
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.continuous = false; // Listen for one phrase at a time
+    recognition.interimResults = false; // Only use final results
     recognition.lang = 'en-US';
 
-    recognition.onstart = () => {
-        console.log("Speech recognition started.");
-    };
+    recognition.onstart = () => console.log("Listening...");
 
     recognition.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        console.log("Transcript detected:", transcript);
-        detectEmotionAndRespond(transcript);
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const confidence = event.results[0][0].confidence;
+        console.log("Transcript:", transcript, "| Confidence:", confidence);
+
+        // Only respond if the confidence is reasonably high
+        if (confidence > 0.6) {
+            detectEmotionAndRespond(transcript);
+        }
     };
 
     recognition.onerror = (event) => {
@@ -41,67 +44,71 @@ function initSpeechRecognition() {
     };
 
     recognition.onend = () => {
-        console.log("Speech recognition ended. Restarting...");
-        restartRecognition();
+        console.log("Recognition ended.");
     };
 
     recognition.start();
 }
 
-// Restart recognition
+// Restart recognition after a delay
 function restartRecognition() {
     setTimeout(() => {
         try {
             recognition.start();
+            console.log("Restarting recognition...");
         } catch (error) {
             console.error("Error restarting recognition:", error);
         }
-    }, 500);
+    }, 1000);
 }
 
-// Detect emotions and play the corresponding audio clip
+// Detect emotions and respond with corresponding audio
 function detectEmotionAndRespond(text) {
-    console.log("Analyzing text:", text);
+    const audioQueue = [];
 
     if (/hi|hello|hey/.test(text)) {
-        playAudio(audios.greeting, "Greeting");
+        audioQueue.push(audios.greeting);
     } else if (/angry|furious|rage/.test(text)) {
-        playAudio(audios.aggressive, "Aggressive");
+        audioQueue.push(audios.aggressive);
     } else if (/defensive|insecure|small/.test(text)) {
-        playAudio(audios.defensive, "Defensive");
+        audioQueue.push(audios.defensive);
     } else if (/flirt|sexy|beautiful/.test(text)) {
-        playAudio(audios.flirtatious, "Flirtatious");
+        audioQueue.push(audios.flirtatious);
     } else if (/care|nurture|mother/.test(text)) {
-        playAudio(audios.motherly, "Motherly");
+        audioQueue.push(audios.motherly);
     } else if (/danger|protest|threat/.test(text)) {
-        playAudio(audios.danger, "Danger");
+        audioQueue.push(audios.danger);
     } else if (/scared|terrified|petrified/.test(text)) {
-        playAudio(audios.terrified, "Terrified");
+        audioQueue.push(audios.terrified);
     } else if (/territory|mine|protect/.test(text)) {
-        playAudio(audios.territorial, "Territorial");
+        audioQueue.push(audios.territorial);
     } else {
         console.log("No specific emotion detected, using default response.");
-        playAudio(audios.motherly, "Default Motherly");
+        audioQueue.push(audios.motherly); // Default response
     }
+
+    playAudioQueue(audioQueue);
 }
 
-// Function to play the audio and log the action
-function playAudio(audio, label) {
-    if (!audio) {
-        console.error("Audio not found for:", label);
+// Play the queued audio files sequentially
+function playAudioQueue(queue) {
+    if (queue.length === 0) {
+        restartRecognition();
         return;
     }
 
-    console.log(`Playing audio for: ${label}`);
+    const audio = queue.shift();
     audio.currentTime = 0;
 
     audio.play()
         .then(() => {
-            console.log(`Audio playing: ${label}`);
+            console.log("Playing audio:", audio.src);
         })
         .catch(error => {
-            console.error(`Error playing audio: ${label}`, error);
+            console.error("Error playing audio:", error);
         });
+
+    audio.onended = () => playAudioQueue(queue);
 }
 
 // Start listening when the page loads
