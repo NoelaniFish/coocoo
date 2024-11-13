@@ -1,13 +1,14 @@
 let recognition;
 let statementStartTime, statementEndTime;
+let drawingEnabled = false;
 
-// Load the audio files
+// Load audio files
 const audios = {
     greeting: new Audio('coo-greeting.mp3'),
+    motherly: new Audio('motherly-nuturing.mp3'),
     aggressive: new Audio('aggressive-territorial.mp3'),
     defensive: new Audio('defensive.mp3'),
     flirtatious: new Audio('flirtatious.mp3'),
-    motherly: new Audio('motherly-nuturing.mp3'),
     danger: new Audio('potential-danger.mp3'),
     terrified: new Audio('terrified-petrified-grunts.mp3'),
     territorial: new Audio('territorial-soft.mp3')
@@ -37,7 +38,6 @@ function initSpeechRecognition() {
         const confidence = event.results[0][0].confidence;
 
         console.log("Transcript:", transcript);
-        console.log("Confidence:", confidence);
 
         if (confidence > 0.5) {
             const duration = (statementEndTime - statementStartTime) / 1000;
@@ -55,7 +55,7 @@ function initSpeechRecognition() {
 
     recognition.onend = () => {
         console.log("Recognition ended.");
-        restartRecognition();
+        enableDrawing();
     };
 
     recognition.start();
@@ -66,60 +66,70 @@ function restartRecognition() {
     setTimeout(() => {
         try {
             recognition.start();
-            console.log("Restarting recognition...");
         } catch (error) {
             console.error("Error restarting recognition:", error);
         }
     }, 500);
 }
 
-// Categorize speech and respond accordingly
+// Categorize speech and respond
 function categorizeAndRespond(text, duration) {
     let audio;
 
-    // Categorize based on the tone of the speech
-    if (/hi|hello|hey|morning|afternoon|evening/.test(text)) {
-        audio = audios.greeting; // Greeting or informal tone
-    } else if (/friend|kind|nice|happy|care|support/.test(text)) {
-        audio = audios.motherly; // Friendly or nurturing tone
-    } else if (/angry|furious|rage|mad/.test(text)) {
-        audio = audios.aggressive;
-    } else if (/defensive|insecure|small|protect/.test(text)) {
-        audio = audios.defensive;
-    } else if (/flirt|sexy|beautiful|charming/.test(text)) {
-        audio = audios.flirtatious;
-    } else if (/danger|threat|warning|protest/.test(text)) {
-        audio = audios.danger;
-    } else if (/scared|terrified|petrified|fear/.test(text)) {
-        audio = audios.terrified;
-    } else if (/territory|mine|belong|protect/.test(text)) {
-        audio = audios.territorial;
-    } else {
-        // Default to greeting if no specific tone is detected
-        console.log("No clear tone detected, using default greeting.");
-        audio = audios.greeting;
-    }
+    if (/hi|hello|hey/.test(text)) audio = audios.greeting;
+    else if (/care|support|nice/.test(text)) audio = audios.motherly;
+    else if (/angry|furious/.test(text)) audio = audios.aggressive;
+    else if (/defensive|insecure/.test(text)) audio = audios.defensive;
+    else if (/flirt|sexy/.test(text)) audio = audios.flirtatious;
+    else if (/danger|threat/.test(text)) audio = audios.danger;
+    else if (/scared|terrified/.test(text)) audio = audios.terrified;
+    else if (/territory|mine/.test(text)) audio = audios.territorial;
+    else audio = audios.greeting;
 
     playAudioForDuration(audio, duration);
 }
 
-// Play the audio for the specified duration
+// Play audio for specified duration
 function playAudioForDuration(audio, duration) {
-    console.log(`Playing audio for ${duration} seconds.`);
     audio.currentTime = 0;
-
     audio.play()
         .then(() => {
             setTimeout(() => {
                 audio.pause();
                 audio.currentTime = 0;
-                restartRecognition();
+                enableDrawing();
             }, duration * 1000);
         })
-        .catch(error => {
-            console.error("Error playing audio:", error);
-        });
+        .catch(error => console.error("Error playing audio:", error));
 }
 
-// Start listening when the page loads
+// Enable drawing mode
+function enableDrawing() {
+    console.log("Drawing mode enabled.");
+    document.getElementById('status').textContent = "Drawing mode enabled!";
+    drawingEnabled = true;
+}
+
+// Drawing functionality
+const canvas = document.getElementById('drawingCanvas');
+const context = canvas.getContext('2d');
+let isDrawing = false;
+
+canvas.addEventListener('mousedown', () => isDrawing = drawingEnabled);
+canvas.addEventListener('mouseup', () => isDrawing = false);
+canvas.addEventListener('mousemove', draw);
+
+function draw(event) {
+    if (!isDrawing) return;
+    context.lineWidth = 5;
+    context.lineCap = 'round';
+    context.strokeStyle = '#00FFCC';
+
+    context.lineTo(event.clientX, event.clientY);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(event.clientX, event.clientY);
+}
+
+// Initialize on page load
 window.onload = initSpeechRecognition;
