@@ -28,15 +28,8 @@ const audioFiles = {
     territorial: new Audio('territorial.mp3')
 };
 
-   // Initialize speech recognition
-function initSpeechRecognition() {
-    if (!('webkitSpeechRecognition' in window)) {
-        alert("Please use Google Chrome for this feature.");
-        return;
-    }
-
- recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
+recognition = new webkitSpeechRecognition();
+    recognition.continuous = true; // Continuous listening
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
@@ -55,14 +48,8 @@ function initSpeechRecognition() {
             const duration = (statementEndTime - statementStartTime) / 1000;
             categorizeAndRespond(transcript, duration);
         } else {
-            playAudioForDuration(audioFiles.conversational, 2);
+            playAudio(audioFiles.conversational);
         }
-    };
-
-    recognition.onspeechend = () => {
-        recognition.stop();
-        statusText.textContent = "Not Listening";
-        statusText.classList.remove('listening');
     };
 
     recognition.onerror = (event) => {
@@ -72,8 +59,8 @@ function initSpeechRecognition() {
     };
 
     recognition.onend = () => {
-        isRecognitionActive = false;
-        console.log("Recognition ended.");
+        console.log("Recognition ended, restarting...");
+        recognition.start(); // Restart recognition for continuous listening
     };
 }
 
@@ -92,32 +79,23 @@ function categorizeAndRespond(text, duration) {
     const category = detectCategory(text);
     categoryDurations[category] += duration;
     console.log(`Category: ${category}, Duration: ${duration}s`);
-    playAudioForDuration(audioFiles[category], duration);
+    playAudio(audioFiles[category]);
 }
 
-// Play audio for a specific duration
-function playAudioForDuration(audio, duration) {
+// Play audio without stopping previous sounds
+function playAudio(audio) {
     if (audio) {
-        audio.currentTime = 0;
-        audio.play();
-        setTimeout(() => {
-            audio.pause();
-            audio.currentTime = 0;
-        }, duration * 1000);
+        const clonedAudio = audio.cloneNode(); // Clone the audio element to allow overlapping
+        clonedAudio.play();
     }
 }
 
-// Event listener for mouse clicks to start/stop recognition
-document.addEventListener('click', () => {
-    if (!isRecognitionActive) {
-        initSpeechRecognition();
-        recognition.start();
-        isRecognitionActive = true;
-    } else {
-        recognition.stop();
-        isRecognitionActive = false;
-    }
-});
+// Start speech recognition immediately when the page loads
+window.onload = () => {
+    initSpeechRecognition();
+    recognition.start();
+    isRecognitionActive = true;
+};
 
 // Ensure the keywords object is defined
 const keywords = {
