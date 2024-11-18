@@ -3,19 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIGEON TRANSLATOR</title>
+    <h1>PIGEON TRANSLATOR</h1>
     <style>
+        body {
+            /* Add background image */
+            background-image: url('pigeon.png');
+            background-size: cover; /* Cover the entire screen */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* Background remains fixed during scroll */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: white; /* Text color for contrast */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Add a shadow for better readability */
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
         #status {
             font-size: 1.5em;
             margin-top: 20px;
-            color: white;
             text-align: center;
+            color: #FFD700; /* Golden color for status text */
         }
     </style>
 </head>
 <body>
     <h1>PIGEON TRANSLATOR</h1>
-    <div id="status">Press and hold to record...</div>
+    <div id="status">Press and hold the spacebar to record...</div>
 
     <!-- Link to the external JavaScript file -->
     <script src="script.js"></script>
