@@ -149,7 +149,7 @@ function playNextInQueue() {
     }, duration * 1000);
 }
 
-// Spacebar event listener to control recognition
+// Event listeners for spacebar control
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space' && !isRecognitionActive) {
         initSpeechRecognition();
@@ -162,3 +162,6 @@ document.addEventListener('keyup', (event) => {
         stopRecognition();
     }
 });
+
+// Ensure the page is ready before initializing
+window.addEventListener('load', initSpeechRecognition);
