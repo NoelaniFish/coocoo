@@ -25,7 +25,7 @@ body {
     font-style: italic; /* Italic text */
     color: white; /* Text color */
     margin-top: 20px; /* Space above the text */
-    background-color: #F0F; /* Dark background for the text */
+    background-color: #000; /* Dark background for the text */
     padding: 10px; /* Padding around the text */
     border-radius: 10px; /* Rounded corners */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0); /* Subtle shadow for readability */
