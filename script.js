@@ -1,8 +1,7 @@
-let isSpacebarPressed = false;
-let speechRecognition;
-let isListening = false;
-let recognizedText = '';
-const statusDisplay = document.getElementById('statusText');
+let recognition;
+let statementStartTime, statementEndTime;
+const statusText = document.getElementById('status');
+let isRecognitionActive = false;
 
 
 // Keyword categories
@@ -20,165 +19,90 @@ const keywords = {
 };
 
 
-// Track category durations
-const categoryDurations = {
-    conversational: 0,
-    homing: 0,
-    aggressive: 0,
-   mating: 0,
-   defensive: 0,
-   wingwhistle: 0,
-   grunt: 0, 
-   territorial: 0
-};
-
-// Load audio files (ensure these files exist and are correct paths)
-const audioFiles = {
-    homing: new Audio('homing.mp3'),
-    aggressive: new Audio('aggressive.mp3'),
-    defensive: new Audio('defensive.mp3'),
-    mating: new Audio('mating.mp3'),
-    wingwhistle: new Audio('wingwhistle.mp3'),
-    grunt: new Audio('grunt.mp3'),
-    territorial: new Audio('territorial.mp3'),
-    conversational: new Audio('conversational.mp3')
-       };
-
-// Initialize Speech Recognition
-async function initializeSpeechRecognition() {
-    if (speechRecognition) return;
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Your browser does not support speech recognition.");
+function initSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        alert("Please use Google Chrome for this feature.");
         return;
     }
 
-    // Request microphone access explicitly
-    try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log("Microphone access granted.");
-    } catch (err) {
-        console.error("Microphone access denied:", err);
-        alert("Please enable microphone access in your browser settings.");
-        return;
-    }
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
-    // Create a new instance of SpeechRecognition
-    speechRecognition = new SpeechRecognition();
-    speechRecognition.continuous = false;
-    speechRecognition.interimResults = false;
-    speechRecognition.lang = 'en-US';
-
-    // Handle speech recognition results
-    speechRecognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        recognizedText += ' ' + transcript;
-        console.log("Recognized:", transcript);
+    recognition.onstart = () => {
+        statusText.textContent = "Listening...";
+        statusText.classList.add('listening');
+        statementStartTime = new Date().getTime();
     };
 
-    // Handle errors
-    speechRecognition.onerror = (event) => {
+    recognition.onresult = (event) => {
+        statementEndTime = new Date().getTime();
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        const confidence = event.results[event.results.length - 1][0].confidence;
+
+        if (confidence > 0.6) {
+            const duration = (statementEndTime - statementStartTime) / 1000;
+            categorizeAndRespond(transcript, duration);
+        } else {
+            playAudioForDuration(audios.greeting, 2);
+        }
+    };
+
+    recognition.onspeechend = () => {
+        recognition.stop();
+        statusText.textContent = "Not Listening";
+        statusText.classList.remove('listening');
+    };
+
+    recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            alert("Microphone access is blocked. Please check your browser settings.");
-        }
+        statusText.textContent = "Error: " + event.error;
+        statusText.classList.remove('listening');
     };
 
-    // Handle end of speech recognition
-    speechRecognition.onend = () => {
-        isListening = false;
-        setListeningStatus(false);
-        console.log("Speech recognition ended.");
+    recognition.onend = () => {
+        isRecognitionActive = false;
+        console.log("Recognition ended.");
     };
 }
 
-// Start listening for speech
-async function startListening() {
-    if (speechRecognition && !isListening) {
-        recognizedText = '';
-        setListeningStatus(true);
-        speechRecognition.start();
-        isListening = true;
-        console.log("Started listening...");
-    }
-}
-
-// Stop listening
-async function stopListening() {
-    if (speechRecognition && isListening) {
-        speechRecognition.stop();
-        isListening = false;
-        setListeningStatus(false);
-        console.log("Stopped listening.");
-        categorizeAndPlayAudio(recognizedText);
-    }
-}
-
-// Update the UI to show listening status
-function setListeningStatus(isListening) {
-    statusDisplay.textContent = isListening ? "Listening..." : "Not Listening";
-    statusDisplay.classList.toggle('listening', isListening);
-}
-
-// Categorize the recognized text and play corresponding audio
-function categorizeAndPlayAudio(text) {
-    const categoryCounts = {};
-    let totalKeywords = 0;
-
-    // Initialize counts for each category
-    for (const category in keywords) {
-        categoryCounts[category] = 0;
-    }
-
-    // Count keywords for each category
+// Detect category based on keywords
+function detectCategory(text) {
     for (const [category, words] of Object.entries(keywords)) {
-        words.forEach(word => {
-            const count = (text.match(new RegExp(`\\b${word}\\b`, 'gi')) || []).length;
-            categoryCounts[category] += count;
-            totalKeywords += count;
-        });
-    }
-
-    // Play audio based on keyword frequency
-    if (totalKeywords > 0) {
-        for (const category in categoryCounts) {
-            const ratio = categoryCounts[category] / totalKeywords;
-            const duration = Math.round(ratio * 5);
-            if (duration > 0) playAudioForCategory(category, duration);
+        if (words.some(word => text.includes(word))) {
+            return category;
         }
     }
+    return 'greeting';
 }
 
-// Play audio for the category based on matching keywords
-function playAudioForCategory(category, duration) {
-    const audio = audioFiles[category];
-    if (audio) {
+// Categorize and respond based on spoken input
+function categorizeAndRespond(text, duration) {
+    const category = detectCategory(text);
+    categoryTimes[category] += duration;
+    console.log(`Category: ${category}, Duration: ${duration}s`);
+    playAudioForDuration(audios[category], duration);
+}
+
+// Play audio for a specific duration
+function playAudioForDuration(audio, duration) {
+    audio.currentTime = 0;
+    audio.play();
+    setTimeout(() => {
+        audio.pause();
         audio.currentTime = 0;
-        audio.play();
-        setTimeout(() => {
-            audio.pause();
-        }, duration * 1000);
-    }
+    }, duration * 1000);
 }
 
-// Event listeners for starting/stopping speech recognition
-document.addEventListener('keydown', async (event) => {
-    if (event.code === 'Space' && !isSpacebarPressed) {
-        event.preventDefault();
-        isSpacebarPressed = true;
-        await initializeSpeechRecognition();
-        await startListening();
+// Event listeners for mouse clicks to start/stop recognition
+document.addEventListener('click', () => {
+    if (!isRecognitionActive) {
+        initSpeechRecognition();
+        recognition.start();
+        isRecognitionActive = true;
+    } else {
+        recognition.stop();
+        isRecognitionActive = false;
     }
 });
-
-document.addEventListener('keyup', async (event) => {
-    if (event.code === 'Space') {
-        event.preventDefault();
-        isSpacebarPressed = false;
-        await stopListening();
-    }
-});
-
-// Initialize on page load
-window.addEventListener('load', initializeSpeechRecognition);
