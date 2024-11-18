@@ -149,19 +149,32 @@ function playNextInQueue() {
     }, duration * 1000);
 }
 
+let spacebarPressed = false; // Track spacebar state
+
 // Event listeners for spacebar control
 document.addEventListener('keydown', (event) => {
-    if (event.code === 'Space' && !isRecognitionActive) {
-        initSpeechRecognition();
-        startRecognition();
+    if (event.code === 'Space' && !spacebarPressed) {
+        event.preventDefault(); // Prevent default spacebar action
+        spacebarPressed = true;
+
+        if (!isRecognitionActive) {
+            initSpeechRecognition();
+            startRecognition();
+        }
     }
 });
 
 document.addEventListener('keyup', (event) => {
-    if (event.code === 'Space' && isRecognitionActive) {
-        stopRecognition();
+    if (event.code === 'Space') {
+        event.preventDefault(); // Prevent default spacebar action
+        spacebarPressed = false;
+
+        if (isRecognitionActive) {
+            stopRecognition();
+        }
     }
 });
+
 
 // Ensure the page is ready before initializing
 window.addEventListener('load', initSpeechRecognition);
