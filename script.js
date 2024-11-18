@@ -1,3 +1,4 @@
+let spacebarPressed = false; // Track spacebar state
 let recognition = null;
 let isRecognitionActive = false;
 const statusText = document.getElementById('statusText');
