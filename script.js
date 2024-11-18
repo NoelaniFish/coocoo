@@ -149,7 +149,7 @@ function handleKeyup(event) {
 }
 
 function startRecognition() {
-    if (recognition) {
+    if (recognition && !isRecognitionActive) {
         recognition.start();
         isRecognitionActive = true;
     }
