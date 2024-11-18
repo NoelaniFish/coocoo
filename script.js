@@ -160,7 +160,7 @@ function playNextInQueue() {
 // Spacebar controls for starting/stopping recognition
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space' && !isSpacebarPressed) {
-        event.preventDefault();
+        event.preventDefault(); // Prevent default spacebar action (like scrolling)
         isSpacebarPressed = true;
 
         if (!isListening) {
