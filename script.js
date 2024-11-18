@@ -5,14 +5,17 @@ let isRecognitionActive = false;
 
 // Load audio files
 const audios = {
-    greeting: new Audio('coo-greeting.mp3'),
-    motherly: new Audio('motherly-nuturing.mp3'),
-    aggressive: new Audio('aggressive-territorial.mp3'),
+    conversational: new Audio('conversational.mp3'),
+    homing: new Audio('homing.mp3'),
+    moan: new Audio('moan.mp3),
+    aggressive: new Audio('aggressive.mp3'),
     defensive: new Audio('defensive.mp3'),
-    flirtatious: new Audio('flirtatious.mp3'),
-    danger: new Audio('potential-danger.mp3'),
-    terrified: new Audio('terrified-petrified-grunts.mp3'),
-    territorial: new Audio('territorial-soft.mp3')
+    mating: new Audio('mating.mp3'),
+    grunt: new Audio('grunt.mp3'),
+    wingwhistle: new Audio('wingwhistle.mp3'),
+    grunts: new Audio('grunts.mp3'),
+    territorial: new Audio('territorial.mp3')
+    
 };
 
 // Initialize speech recognition
