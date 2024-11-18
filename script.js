@@ -24,26 +24,15 @@ const keywords = {
 const categoryDurations = {
     conversational: 0,
     homing: 0,
-    aggressive: 0,
-    defensive: 0,
-    mating: 0,
-    grunt: 0,
-    wingwhistle: 0,
-    territorial: 0
+    aggressive: 0
 };
 
-// Load audio files
+// Load audio files (ensure these files exist and are correct paths)
 const audioFiles = {
     conversational: new Audio('conversational.mp3'),
     homing: new Audio('homing.mp3'),
-    aggressive: new Audio('aggressive.mp3'),
-    defensive: new Audio('defensive.mp3'),
-    mating: new Audio('mating.mp3'),
-    grunt: new Audio('grunt.mp3'),
-    wingwhistle: new Audio('wingwhistle.mp3'),
-    territorial: new Audio('territorial.mp3')
+    aggressive: new Audio('aggressive.mp3')
 };
-
 
 // Initialize Speech Recognition
 function initializeSpeechRecognition() {
@@ -55,22 +44,27 @@ function initializeSpeechRecognition() {
         return;
     }
 
+    // Create a new instance of the speech recognition
     speechRecognition = new SpeechRecognition();
     speechRecognition.continuous = false;
     speechRecognition.interimResults = false;
     speechRecognition.lang = 'en-US';
 
+    // Handle speech recognition results
     speechRecognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript.toLowerCase();
         recognizedText += ' ' + transcript;
         console.log("Recognized:", transcript);
     };
 
+    // Handle errors in speech recognition
     speechRecognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
+        alert("Error with microphone or speech recognition. Please try again.");
     };
 }
 
+// Start listening for speech
 function startListening() {
     return new Promise((resolve) => {
         if (speechRecognition && !isListening) {
@@ -83,6 +77,7 @@ function startListening() {
     });
 }
 
+// Stop listening and process the results
 function stopListening() {
     return new Promise((resolve) => {
         if (speechRecognition && isListening) {
@@ -94,11 +89,13 @@ function stopListening() {
     });
 }
 
+// Update the UI to show listening status
 function setListeningStatus(isListening) {
     statusDisplay.textContent = isListening ? "Listening..." : "Not Listening";
     statusDisplay.classList.toggle('listening', isListening);
 }
 
+// Categorize the recognized text and play corresponding audio
 function categorizeAndPlayAudio(text) {
     const categoryCounts = {};
     let totalKeywords = 0;
@@ -121,26 +118,28 @@ function categorizeAndPlayAudio(text) {
     if (totalKeywords > 0) {
         for (const category in categoryCounts) {
             const ratio = categoryCounts[category] / totalKeywords;
-            const duration = Math.round(ratio * 5); // 5 seconds max per category
+            const duration = Math.round(ratio * 5); // Max 5 seconds per category
             if (duration > 0) playAudioForCategory(category, duration);
         }
     }
 }
 
+// Play audio for the category based on matching keywords
 function playAudioForCategory(category, duration) {
     const audio = audioFiles[category];
     if (audio) {
-        audio.currentTime = 0;
-        audio.play();
+        audio.currentTime = 0;  // Reset audio to the start
+        audio.play();           // Play the audio
         audio.addEventListener('ended', () => {
-            audio.pause();
+            audio.pause();      // Stop audio when finished
         });
         setTimeout(() => {
-            audio.pause();
-        }, duration * 1000);
+            audio.pause();      // Force stop after the duration
+        }, duration * 1000);   // Convert duration from seconds to milliseconds
     }
 }
 
+// Key event listeners for starting and stopping the speech recognition
 document.addEventListener('keydown', async (event) => {
     if (event.code === 'Space' && !isSpacebarPressed) {
         event.preventDefault();
