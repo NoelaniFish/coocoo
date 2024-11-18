@@ -25,6 +25,10 @@ const audios = {
     wingwhistle: new Audio('wingwhistle.mp3'),
     territorial: new Audio('territorial.mp3')
 };
+// Queue to store sounds to play sequentially
+let audioQueue = [];
+let isPlaying = false;
+
 // Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
@@ -33,8 +37,8 @@ function initSpeechRecognition() {
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = false; // Stop after each statement
-    recognition.interimResults = false; // Only capture final results
+    recognition.continuous = false;
+    recognition.interimResults = false;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
@@ -74,6 +78,7 @@ function initSpeechRecognition() {
     };
 }
 
+
 // Keyword categories
 const keywords = {
    homing: ["love", "friends", "besties", "pals", "amigos", "support", "hug", "calm", "comfort", "love of my life", "I love you", "marry me", "chosen family", "you mean the world", "pets", "mom", "mami", "mommy", "mama", "moms", "mother", "father", "papa", "daddy", "dad", "dads", "siblings", "doggo", "home", "meadow", "nature", "brother", "bro", "sis", "sister", "sistah", "sibling", "nonbinary", "am", "exist", "identify", "identity", "home", "house", "live", "life", "parent", "parents", "rent", "apartment", "loft", "cottage", "farm", "woods", "goats", "sheep", "cow", "horse", "ride", "solo", "lives", "cat", "meow", "dog", "woof", "coffee", "matcha", "tea", "brew", "pet", "pets", "animals", "comfort", "comfy", "rat", "lizard", "bush", "christmas", "halloween", "thanks", "giving", "tree", "support", "soft", "supportive", "blood", "heart", "family", "zen", "rake", "vacuum", "mow", "platonic", "adopt", "empathy", "grandpa", "grandma", "aunt", "neice", "nephew", "uncle", "cousin", "baby", "babies", "child", "children", "kid", "kids", "bird", "pigeon", "pigeons", "babies", "great", "son", "daughter", "toddler", "homing", "learn", "learning", "education", "school", "elementary", "high", "middle", "cool", "chill", "thought", "thoughtful", "cherish", "rescue", "beach", "grounded", "meditation", "religion", "buddhism", "mormonism", "christianity", "judaism", "jewish", "christian", "mormon", "she", "he", "they", "buddhist", "muslim", "islam", "sikhism", "Sikh", "unitarian", "universalist", "hinduism", "hindu", "taoism", "taoist", "Confucianist", "confucianism", "baptist", "catholic", "evangelical", "hang out", "spend", "together", "pray", "time", "kind", "nice", "sweet", "funny", "hilarious", "squad", "fam", "world", "earth", "planets", "Dinos", "dinosaurs", "rest", "sun", "moon", "ocean", "stars", "thought", "pray", "high", "hobbies", "hobby", "designer", "coding", "computer", "phone"],
@@ -88,38 +93,47 @@ const keywords = {
 
 };
 
-// Detect category based on keywords
+// Detect category based on keywords and add to queue
 function categorizeAndRespond(text, duration) {
-    let audio = audios.conversational;
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => new RegExp(`\\b${word}\\b`, 'i').test(text))) {
-            audio = audios[category];
+            addToQueue(audios[category], duration);
             categoryTimes[category] += duration;
             break;
         }
     }
 }
 
-// Play audio based on accumulated time
-function playCategorizedAudio() {
-    for (const [category, time] of Object.entries(categoryTimes)) {
-        if (time > 0) {
-            console.log(`Playing ${category} for ${time} seconds.`);
-            playAudioForDuration(audios[category], time);
-        }
+// Add audio to the queue
+function addToQueue(audio, duration) {
+    audioQueue.push({ audio, duration });
+    if (!isPlaying) {
+        playNextInQueue();
     }
 }
 
-// Play audio for a specified duration
-function playAudioForDuration(audio, duration) {
+// Play the next sound in the queue
+function playNextInQueue() {
+    if (audioQueue.length === 0) {
+        isPlaying = false;
+        return;
+    }
+
+    isPlaying = true;
+    const { audio, duration } = audioQueue.shift();
+
+    // Play the audio for the specified duration
     audio.currentTime = 0;
     audio.play();
+
     setTimeout(() => {
         audio.pause();
         audio.currentTime = 0;
+        playNextInQueue();
     }, duration * 1000);
 }
 
+// Stop recognition
 function stopRecognition() {
     if (recognition) {
         recognition.stop();
