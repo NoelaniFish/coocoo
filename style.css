@@ -13,6 +13,7 @@ body {
     justify-content: center; /* Center content vertically */
     height: 100vh; /* Full viewport height */
     background-color: #000; /* Black background */
+    font-size: 14pt; /* Text size */
     font-family: Helvetica, sans-serif; /* Set font family */
     text-align: center; /* Center-align all text */
     color: #fff; /* Default text color */
@@ -21,7 +22,7 @@ body {
 
 /* Style for the centered status message */
 #status {
-    font-size: 12pt; /* Text size */
+    font-size: 10pt; /* Text size */
     font-style: italic; /* Italic text */
     color: white; /* Text color */
     margin-top: 20px; /* Space above the text */
