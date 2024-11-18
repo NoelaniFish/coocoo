@@ -61,7 +61,7 @@ function initSpeechRecognition() {
 
         if (confidence > 0.6) {
             console.log("Transcript:", transcript);
-            processTranscript(transcript);
+            processTranscript(transcript, event.results[event.results.length - 1][0].transcript.length);
         }
     };
 
@@ -77,52 +77,39 @@ function initSpeechRecognition() {
     };
 }
 
-// Process the transcript and update durations
-function processTranscript(transcript) {
+// Process the transcript and calculate duration
+function processTranscript(transcript, transcriptLength) {
     let matchedCategory = null;
+    let matchFound = false;
+    const duration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
 
+    // Check for keywords in each category
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => transcript.includes(word))) {
             matchedCategory = category;
-            categoryDurations[category] = (categoryDurations[category] || 0) + 3; // Add 3 seconds for match
+            categoryDurations[category] = duration;
+            matchFound = true;
             break;
         }
     }
 
-    if (!matchedCategory) {
-        categoryDurations.conversational = (categoryDurations.conversational || 0) + 3; // Default to conversational
+    if (!matchFound) {
         matchedCategory = 'conversational';
+        categoryDurations.conversational = duration;
     }
 
     console.log(`Matched Category: ${matchedCategory}, Duration: ${categoryDurations[matchedCategory]} seconds`);
-    queueAudio(matchedCategory);
+    playAudio(audioFiles[matchedCategory], categoryDurations[matchedCategory]);
 }
 
-// Queue audio playback
-function queueAudio(category) {
-    if (!audioQueue.includes(category)) {
-        audioQueue.push(category);
-        if (audioQueue.length === 1) {
-            playNextAudio();
-        }
-    }
-}
-
-// Play the next audio in the queue
-function playNextAudio() {
-    if (audioQueue.length === 0) return;
-
-    const category = audioQueue[0];
-    const audio = audioFiles[category];
-    const duration = categoryDurations[category] || 3;
-
+// Play audio for the calculated duration
+function playAudio(audio, duration) {
     if (audio) {
-        audio.play();
-        console.log(`Playing ${category} for ${duration} seconds`);
-
+        const clonedAudio = audio.cloneNode();
+        clonedAudio.play();
         setTimeout(() => {
-            audioQueue.shift();
-            playNextAudio();
+            clonedAudio.pause();
+            clonedAudio.currentTime = 0;
         }, duration * 1000);
     }
 }
@@ -143,7 +130,7 @@ function handleKeyup(event) {
 }
 
 function startRecognition() {
-    if (recognition && !isRecognitionActive) {
+    if (recognition) {
         recognition.start();
         isRecognitionActive = true;
     }
