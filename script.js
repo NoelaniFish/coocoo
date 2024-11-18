@@ -29,7 +29,7 @@ const audios = {
 let audioQueue = [];
 let isPlaying = false;
 
-// Initialize Speech Recognition (without microphone access)
+// Initialize Speech Recognition
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -38,7 +38,7 @@ function initSpeechRecognition() {
     }
 
     recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
@@ -48,7 +48,7 @@ function initSpeechRecognition() {
     };
 
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript.toLowerCase();
+        const transcript = event.results[event.resultIndex][0].transcript.toLowerCase();
         console.log("Recognized text:", transcript);
         categorizeAndRespond(transcript, 2); // Example duration
     };
@@ -61,22 +61,25 @@ function initSpeechRecognition() {
     recognition.onend = () => {
         console.log("Speech recognition ended");
         statusText.textContent = "Not Listening";
+        isRecognitionActive = false;
     };
 }
 
-// Start and stop recognition
+// Start recognition
 function startRecognition() {
-    if (recognition) {
+    if (recognition && !isRecognitionActive) {
         recognition.start();
         isRecognitionActive = true;
+        statusText.textContent = "Listening...";
     }
 }
 
+// Stop recognition
 function stopRecognition() {
-    if (recognition) {
+    if (recognition && isRecognitionActive) {
         recognition.stop();
-        statusText.textContent = "Not Listening";
         isRecognitionActive = false;
+        statusText.textContent = "Not Listening";
     }
 }
 
