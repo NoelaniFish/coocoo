@@ -39,71 +39,96 @@ const keywords = {
 
 };
 
- // Initialize Speech Recognition
-        function initSpeechRecognition() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Your browser does not support speech recognition. Please use Google Chrome.");
-                return;
-            }
+// Initialize Speech Recognition
+function initSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        alert("Your browser does not support speech recognition. Please use Google Chrome.");
+        return;
+    }
 
-            recognition = new webkitSpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
 
-            recognition.onstart = () => {
-                statusText.textContent = "Listening...";
-                isRecognitionActive = true;
-                console.log("Speech recognition started");
-            };
+    recognition.onstart = () => {
+        statusText.textContent = "Listening...";
+        console.log("Speech recognition started");
+    };
 
-            recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-                const confidence = event.results[event.results.length - 1][0].confidence;
+    recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        const confidence = event.results[event.results.length - 1][0].confidence;
 
-                if (confidence > 0.6) {
-                    console.log("Transcript:", transcript);
-                    detectKeywordsAndPlayAudio(transcript);
-                }
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech recognition error:", event.error);
-                statusText.textContent = `Error: ${event.error}`;
-                isRecognitionActive = false;
-            };
-
-            recognition.onend = () => {
-                console.log("Speech recognition ended.");
-                statusText.textContent = "Recognition ended. Click to restart.";
-                isRecognitionActive = false;
-            };
-
-            recognition.start();
-            isRecognitionActive = true;
+        if (confidence > 0.6) {
+            console.log("Transcript:", transcript);
+            detectKeywordsAndPlayAudio(transcript);
         }
+    };
 
-        // Detect keywords and play corresponding audio
-        function detectKeywordsAndPlayAudio(transcript) {
-            for (const [category, words] of Object.entries(keywords)) {
-                if (words.some(word => transcript.includes(word))) {
-                    console.log(`Keyword detected: ${category}`);
-                    playAudio(audioFiles[category]);
-                }
-            }
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        statusText.textContent = `Error: ${event.error}`;
+    };
+
+    recognition.onend = () => {
+        console.log("Speech recognition ended.");
+        statusText.textContent = "Press and hold the spacebar to record...";
+        isRecognitionActive = false;
+    };
+}
+
+// Detect keywords and play corresponding audio
+function detectKeywordsAndPlayAudio(transcript) {
+    for (const [category, words] of Object.entries(keywords)) {
+        if (words.some(word => transcript.includes(word))) {
+            console.log(`Keyword detected: ${category}`);
+            playAudio(audioFiles[category]);
         }
+    }
+}
 
-        // Play audio without stopping previous sounds
-        function playAudio(audio) {
-            if (audio) {
-                const clonedAudio = audio.cloneNode(); // Allow overlapping sounds
-                clonedAudio.play();
-            }
-        }
+// Play audio without stopping previous sounds
+function playAudio(audio) {
+    if (audio) {
+        const clonedAudio = audio.cloneNode(); // Allow overlapping sounds
+        clonedAudio.play();
+    }
+}
 
-        // Start speech recognition when the page loads
-        window.onload = () => {
-            console.log("Page loaded, ready to start listening...");
-        };
+// Start/Stop speech recognition on spacebar press
+function handleKeydown(event) {
+    if (event.code === 'Space' && !isRecognitionActive) {
+        event.preventDefault(); // Prevent default spacebar action
+        startRecognition();
+    }
+}
 
+function handleKeyup(event) {
+    if (event.code === 'Space' && isRecognitionActive) {
+        event.preventDefault();
+        stopRecognition();
+    }
+}
 
+function startRecognition() {
+    if (recognition) {
+        recognition.start();
+        isRecognitionActive = true;
+    }
+}
+
+function stopRecognition() {
+    if (recognition && isRecognitionActive) {
+        recognition.stop();
+        isRecognitionActive = false;
+        statusText.textContent = "Recognition stopped. Press and hold the spacebar to record again.";
+    }
+}
+
+// Initialize speech recognition and event listeners on page load
+window.onload = () => {
+    initSpeechRecognition();
+    window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keyup', handleKeyup);
+};
