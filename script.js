@@ -26,11 +26,24 @@ let isPlaying = false;
 
 // Initialize speech recognition
 function initSpeechRecognition() {
+    // Check if the browser supports speech recognition
     if (!('webkitSpeechRecognition' in window)) {
         alert("Please use Google Chrome for this feature.");
         return;
     }
 
+    // Request microphone permissions
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+            startRecognition();
+        })
+        .catch((error) => {
+            console.error("Microphone access denied:", error);
+            alert("Microphone access is required to use this feature.");
+        });
+}
+
+function startRecognition() {
     recognition = new webkitSpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -71,7 +84,33 @@ function initSpeechRecognition() {
         statusText.textContent = "Not Listening";
         statusText.classList.remove('listening');
     };
+
+    recognition.start();
 }
+
+// Stop recognition
+function stopRecognition() {
+    if (recognition) {
+        recognition.stop();
+        statusText.textContent = "Not Listening";
+        statusText.classList.remove('listening');
+    }
+}
+
+// Listen for spacebar events to control speech recognition
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space' && !isRecognitionActive) {
+        initSpeechRecognition();
+        isRecognitionActive = true;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    if (event.code === 'Space' && isRecognitionActive) {
+        stopRecognition();
+        isRecognitionActive = false;
+    }
+});
 
 
 // Keyword categories
