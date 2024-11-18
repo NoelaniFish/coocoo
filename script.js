@@ -1,9 +1,10 @@
-let spacebarPressed = false; // Track spacebar state
-let recognition = null;
-let isRecognitionActive = false;
-const statusText = document.getElementById('statusText');
+let isSpacebarPressed = false; // Track spacebar state
+let speechRecognition = null;
+let isListening = false;
+const statusDisplay = document.getElementById('statusText');
 
-const categoryTimes = {
+// Track category durations
+const categoryDurations = {
     conversational: 0,
     homing: 0,
     aggressive: 0,
@@ -15,7 +16,7 @@ const categoryTimes = {
 };
 
 // Load audio files
-const audios = {
+const audioFiles = {
     conversational: new Audio('conversational.mp3'),
     homing: new Audio('homing.mp3'),
     aggressive: new Audio('aggressive.mp3'),
@@ -26,61 +27,61 @@ const audios = {
     territorial: new Audio('territorial.mp3')
 };
 
-// Queue to store sounds to play sequentially
+// Audio queue management
 let audioQueue = [];
-let isPlaying = false;
+let isAudioPlaying = false;
 
 // Initialize Speech Recognition
-function initSpeechRecognition() {
+function initializeSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Your browser does not support speech recognition.");
         return;
     }
 
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    speechRecognition = new SpeechRecognition();
+    speechRecognition.continuous = true;
+    speechRecognition.interimResults = false;
+    speechRecognition.lang = 'en-US';
 
-    recognition.onstart = () => {
-        console.log("Speech recognition started");
-        statusText.textContent = "Listening...";
+    speechRecognition.onstart = () => {
+        console.log("Listening...");
+        statusDisplay.textContent = "Listening...";
     };
 
-    recognition.onresult = (event) => {
+    speechRecognition.onresult = (event) => {
         const transcript = event.results[event.resultIndex][0].transcript.toLowerCase();
-        console.log("Recognized text:", transcript);
-        categorizeAndRespond(transcript, 2); // Example duration
+        console.log("Recognized:", transcript);
+        handleSpeech(transcript, 2); // Example duration
     };
 
-    recognition.onerror = (event) => {
+    speechRecognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        stopRecognition();
+        stopListening();
     };
 
-    recognition.onend = () => {
-        console.log("Speech recognition ended");
-        statusText.textContent = "Not Listening";
-        isRecognitionActive = false;
+    speechRecognition.onend = () => {
+        console.log("Stopped listening");
+        statusDisplay.textContent = "Not Listening";
+        isListening = false;
     };
 }
 
-// Start recognition
-function startRecognition() {
-    if (recognition && !isRecognitionActive) {
-        recognition.start();
-        isRecognitionActive = true;
-        statusText.textContent = "Listening...";
+// Start listening
+function startListening() {
+    if (speechRecognition && !isListening) {
+        speechRecognition.start();
+        isListening = true;
+        statusDisplay.textContent = "Listening...";
     }
 }
 
-// Stop recognition
-function stopRecognition() {
-    if (recognition && isRecognitionActive) {
-        recognition.stop();
-        isRecognitionActive = false;
-        statusText.textContent = "Not Listening";
+// Stop listening
+function stopListening() {
+    if (speechRecognition && isListening) {
+        speechRecognition.stop();
+        isListening = false;
+        statusDisplay.textContent = "Not Listening";
     }
 }
 
@@ -98,18 +99,13 @@ const keywords = {
 
 };
 
-// Categorize recognized text and play corresponding sound
-function categorizeAndRespond(text, duration) {
+// Handle recognized speech
+function handleSpeech(text, duration) {
     let matchedCategory = null;
     let highestMatchCount = 0;
 
-    for (const [category, words] of Object.entries(keywords)) {
-        let matchCount = 0;
-        for (const word of words) {
-            if (new RegExp(`\\b${word}\\b`, 'i').test(text)) {
-                matchCount++;
-            }
-        }
+    for (const [category, words] of Object.entries(keywordCategories)) {
+        let matchCount = words.reduce((count, word) => count + (text.includes(word) ? 1 : 0), 0);
         if (matchCount > highestMatchCount) {
             highestMatchCount = matchCount;
             matchedCategory = category;
@@ -117,29 +113,33 @@ function categorizeAndRespond(text, duration) {
     }
 
     if (matchedCategory) {
-        console.log(`Matched category: ${matchedCategory}`);
-        addToQueue(audios[matchedCategory], duration);
-        categoryTimes[matchedCategory] += duration;
+        console.log(`Category matched: ${matchedCategory}`);
+        playAudioForCategory(matchedCategory, duration);
+        categoryDurations[matchedCategory] += duration;
     } else {
-        console.log("No matching category found. Playing default.");
-        addToQueue(audios.conversational, duration);
+        console.log("No category matched, playing default.");
+        playAudioForCategory('conversational', duration);
     }
 }
 
-// Add audio to queue
-function addToQueue(audio, duration) {
-    audioQueue.push({ audio, duration });
-    if (!isPlaying) playNextInQueue();
+// Play audio based on category
+function playAudioForCategory(category, duration) {
+    const audio = audioFiles[category];
+    if (audio) addAudioToQueue(audio, duration);
 }
 
-// Play queued audio sequentially
+function addAudioToQueue(audio, duration) {
+    audioQueue.push({ audio, duration });
+    if (!isAudioPlaying) playNextInQueue();
+}
+
 function playNextInQueue() {
     if (audioQueue.length === 0) {
-        isPlaying = false;
+        isAudioPlaying = false;
         return;
     }
 
-    isPlaying = true;
+    isAudioPlaying = true;
     const { audio, duration } = audioQueue.shift();
     audio.currentTime = 0;
     audio.play();
@@ -150,31 +150,29 @@ function playNextInQueue() {
     }, duration * 1000);
 }
 
-
-// Event listeners for spacebar control
+// Spacebar controls for starting/stopping recognition
 document.addEventListener('keydown', (event) => {
-    if (event.code === 'Space' && !spacebarPressed) {
-        event.preventDefault(); // Prevent default spacebar action
-        spacebarPressed = true;
+    if (event.code === 'Space' && !isSpacebarPressed) {
+        event.preventDefault();
+        isSpacebarPressed = true;
 
-        if (!isRecognitionActive) {
-            initSpeechRecognition();
-            startRecognition();
+        if (!isListening) {
+            initializeSpeechRecognition();
+            startListening();
         }
     }
 });
 
 document.addEventListener('keyup', (event) => {
     if (event.code === 'Space') {
-        event.preventDefault(); // Prevent default spacebar action
-        spacebarPressed = false;
+        event.preventDefault();
+        isSpacebarPressed = false;
 
-        if (isRecognitionActive) {
-            stopRecognition();
+        if (isListening) {
+            stopListening();
         }
     }
 });
 
-
-// Ensure the page is ready before initializing
-window.addEventListener('load', initSpeechRecognition);
+// Ensure initialization when the page loads
+window.addEventListener('load', initializeSpeechRecognition);
