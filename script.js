@@ -46,23 +46,15 @@ const audioFiles = {
 
 // Initialize Speech Recognition
 async function initializeSpeechRecognition() {
-    // Check if already initialized
     if (speechRecognition) return;
 
-    // Get the Speech Recognition API
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Your browser does not support speech recognition.");
         return;
     }
 
-    // Create a new instance of the SpeechRecognition
-    speechRecognition = new SpeechRecognition();
-    speechRecognition.continuous = false;
-    speechRecognition.interimResults = false;
-    speechRecognition.lang = 'en-US';
-
-    // Request microphone permissions explicitly
+    // Request microphone access explicitly
     try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
         console.log("Microphone access granted.");
@@ -71,6 +63,12 @@ async function initializeSpeechRecognition() {
         alert("Please enable microphone access in your browser settings.");
         return;
     }
+
+    // Create a new instance of SpeechRecognition
+    speechRecognition = new SpeechRecognition();
+    speechRecognition.continuous = false;
+    speechRecognition.interimResults = false;
+    speechRecognition.lang = 'en-US';
 
     // Handle speech recognition results
     speechRecognition.onresult = (event) => {
@@ -87,6 +85,7 @@ async function initializeSpeechRecognition() {
         }
     };
 
+    // Handle end of speech recognition
     speechRecognition.onend = () => {
         isListening = false;
         setListeningStatus(false);
@@ -95,126 +94,25 @@ async function initializeSpeechRecognition() {
 }
 
 // Start listening for speech
-function startListening() {
-    return new Promise((resolve) => {
-        if (speechRecognition && !isListening) {
-            recognizedText = '';
-            setListeningStatus(true);
-            speechRecognition.start();
-            isListening = true;
-            console.log("Started listening...");
-            speechRecognition.onend = resolve;
-        }
-    });
+async function startListening() {
+    if (speechRecognition && !isListening) {
+        recognizedText = '';
+        setListeningStatus(true);
+        speechRecognition.start();
+        isListening = true;
+        console.log("Started listening...");
+    }
 }
 
 // Stop listening
-function stopListening() {
-    return new Promise((resolve) => {
-        if (speechRecognition && isListening) {
-            speechRecognition.stop();
-            isListening = false;
-            setListeningStatus(false);
-            console.log("Stopped listening.");
-            resolve();
-        }
-    });
-}
-
-// Update the UI for listening status
-function setListeningStatus(isListening) {
-    statusDisplay.textContent = isListening ? "Listening..." : "Not Listening";
-    statusDisplay.classList.toggle('listening', isListening);
-}
-
-// Categorize text and play audio
-function categorizeAndPlayAudio(text) {
-    const categoryCounts = {};
-    let totalKeywords = 0;
-
-    // Initialize counts for each category
-    for (const category in keywords) {
-        categoryCounts[category] = 0;
-    }
-
-    // Count keywords for each category
-    for (const [category, words] of Object.entries(keywords)) {
-        words.forEach(word => {
-            const count = (text.match(new RegExp(`\\b${word}\\b`, 'gi')) || []).length;
-            categoryCounts[category] += count;
-            totalKeywords += count;
-        });
-    }
-
-    // Play audio based on keyword frequency
-    if (totalKeywords > 0) {
-        for (const category in categoryCounts) {
-            const ratio = categoryCounts[category] / totalKeywords;
-            const duration = Math.round(ratio * 5); // Max 5 seconds per category
-            if (duration > 0) playAudioForCategory(category, duration);
-        }
-    }
-}
-
-// Play audio for a category
-function playAudioForCategory(category, duration) {
-    const audio = audioFiles[category];
-    if (audio) {
-        audio.currentTime = 0;
-        audio.play();
-        setTimeout(() => {
-            audio.pause();
-        }, duration * 1000);
-    }
-}
-
-// Key event listeners for starting/stopping speech recognition
-document.addEventListener('keydown', async (event) => {
-    if (event.code === 'Space' && !isSpacebarPressed) {
-        event.preventDefault();
-        isSpacebarPressed = true;
-        await initializeSpeechRecognition();
-        await startListening();
-    }
-});
-
-document.addEventListener('keyup', async (event) => {
-    if (event.code === 'Space') {
-        event.preventDefault();
-        isSpacebarPressed = false;
-        await stopListening();
+async function stopListening() {
+    if (speechRecognition && isListening) {
+        speechRecognition.stop();
+        isListening = false;
+        setListeningStatus(false);
+        console.log("Stopped listening.");
         categorizeAndPlayAudio(recognizedText);
     }
-});
-
-// Initialize on page load
-window.addEventListener('load', async () => {
-    await initializeSpeechRecognition();
-});
-
-// Start listening for speech
-function startListening() {
-    return new Promise((resolve) => {
-        if (speechRecognition && !isListening) {
-            recognizedText = '';
-            setListeningStatus(true);
-            speechRecognition.start();
-            isListening = true;
-            speechRecognition.onend = resolve;
-        }
-    });
-}
-
-// Stop listening and process the results
-function stopListening() {
-    return new Promise((resolve) => {
-        if (speechRecognition && isListening) {
-            speechRecognition.stop();
-            isListening = false;
-            setListeningStatus(false);
-            resolve();
-        }
-    });
 }
 
 // Update the UI to show listening status
@@ -246,7 +144,7 @@ function categorizeAndPlayAudio(text) {
     if (totalKeywords > 0) {
         for (const category in categoryCounts) {
             const ratio = categoryCounts[category] / totalKeywords;
-            const duration = Math.round(ratio * 5); // Max 5 seconds per category
+            const duration = Math.round(ratio * 5);
             if (duration > 0) playAudioForCategory(category, duration);
         }
     }
@@ -256,18 +154,15 @@ function categorizeAndPlayAudio(text) {
 function playAudioForCategory(category, duration) {
     const audio = audioFiles[category];
     if (audio) {
-        audio.currentTime = 0;  // Reset audio to the start
-        audio.play();           // Play the audio
-        audio.addEventListener('ended', () => {
-            audio.pause();      // Stop audio when finished
-        });
+        audio.currentTime = 0;
+        audio.play();
         setTimeout(() => {
-            audio.pause();      // Force stop after the duration
-        }, duration * 1000);   // Convert duration from seconds to milliseconds
+            audio.pause();
+        }, duration * 1000);
     }
 }
 
-// Key event listeners for starting and stopping the speech recognition
+// Event listeners for starting/stopping speech recognition
 document.addEventListener('keydown', async (event) => {
     if (event.code === 'Space' && !isSpacebarPressed) {
         event.preventDefault();
@@ -282,7 +177,6 @@ document.addEventListener('keyup', async (event) => {
         event.preventDefault();
         isSpacebarPressed = false;
         await stopListening();
-        categorizeAndPlayAudio(recognizedText);
     }
 });
 
