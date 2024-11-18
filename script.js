@@ -25,7 +25,7 @@ const audios = {
     wingwhistle: new Audio('wingwhistle.mp3'),
     territorial: new Audio('territorial.mp3')
 };
-// Initialize speech recognition
+Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
         alert("Please use Google Chrome for this feature.");
@@ -33,8 +33,8 @@ function initSpeechRecognition() {
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.continuous = false; // Stop after each statement
+    recognition.interimResults = false; // Only capture final results
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
@@ -43,11 +43,10 @@ function initSpeechRecognition() {
         statementStartTime = new Date().getTime();
     };
 
-
-   recognition.onresult = (event) => {
+    recognition.onresult = (event) => {
         statementEndTime = new Date().getTime();
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        const confidence = event.results[event.results.length - 1][0].confidence;
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        const confidence = event.results[0][0].confidence;
         const transcriptLength = transcript.trim().length;
 
         if (confidence > 0.6 && transcriptLength > 5) {
@@ -55,7 +54,8 @@ function initSpeechRecognition() {
             categorizeAndRespond(transcript, duration);
         }
     };
-recognition.onspeechend = () => {
+
+    recognition.onspeechend = () => {
         stopRecognition();
         playCategorizedAudio();
     };
@@ -64,6 +64,7 @@ recognition.onspeechend = () => {
         console.error("Speech recognition error:", event.error);
         statusText.textContent = "Error: " + event.error;
         statusText.classList.remove('listening');
+        stopRecognition();
     };
 
     recognition.onend = () => {
@@ -127,11 +128,18 @@ function stopRecognition() {
     }
 }
 
-/ Event listeners for starting/stopping speech recognition
-document.addEventListener('mousedown', () => {
-    if (!isRecognitionActive) {
+// Listen for spacebar events to control speech recognition
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space' && !isRecognitionActive) {
         initSpeechRecognition();
         recognition.start();
         isRecognitionActive = true;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    if (event.code === 'Space' && isRecognitionActive) {
+        stopRecognition();
+        isRecognitionActive = false;
     }
 });
