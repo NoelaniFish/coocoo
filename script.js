@@ -1,7 +1,9 @@
-let isSpacebarPressed = false; // Track spacebar state
-let speechRecognition = null;
+let isSpacebarPressed = false;
+let speechRecognition;
 let isListening = false;
+let recognizedText = '';
 const statusDisplay = document.getElementById('statusText');
+
 
 // Track category durations
 const categoryDurations = {
@@ -27,71 +29,6 @@ const audioFiles = {
     territorial: new Audio('territorial.mp3')
 };
 
-// Audio queue management
-let audioQueue = [];
-let isAudioPlaying = false;
-
-// Initialize Speech Recognition
-function initializeSpeechRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Your browser does not support speech recognition.");
-        return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (!SpeechRecognition) {
-    alert("Your browser does not support speech recognition.");
-    return;
-}
-
-speechRecognition = new SpeechRecognition();
-speechRecognition.continuous = true;
-speechRecognition.interimResults = false;
-speechRecognition.lang = 'en-US';
-
-
-    speechRecognition.onstart = () => {
-        console.log("Listening...");
-        statusDisplay.textContent = "Listening...";
-    };
-
-    speechRecognition.onresult = (event) => {
-        const transcript = event.results[event.resultIndex][0].transcript.toLowerCase();
-        console.log("Recognized:", transcript);
-        handleSpeech(transcript, 2); // Example duration
-    };
-
-    speechRecognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        stopListening();
-    };
-
-    speechRecognition.onend = () => {
-        console.log("Stopped listening");
-        statusDisplay.textContent = "Not Listening";
-        isListening = false;
-    };
-}
-
-// Start listening
-function startListening() {
-    if (speechRecognition && !isListening) {
-        speechRecognition.start();
-        isListening = true;
-        statusDisplay.textContent = "Listening...";
-    }
-}
-
-// Stop listening
-function stopListening() {
-    if (speechRecognition && isListening) {
-        speechRecognition.stop();
-        isListening = false;
-        statusDisplay.textContent = "Not Listening";
-    }
-}
-
 // Keyword categories
 const keywords = {
    homing: ["love", "friends", "left", "red", "blue", "yellow", "orange", "black", "brown", "purple", "grass", "bug", "white", "yep", "besties", "pals", "amigos", "support", "hug", "calm", "comfort", "love of my life", "I love you", "marry me", "chosen family", "you mean the world", "pets", "mom", "mami", "mommy", "mama", "moms", "mother", "father", "papa", "daddy", "dad", "dads", "siblings", "doggo", "home", "meadow", "nature", "brother", "bro", "sis", "sister", "sistah", "sibling", "nonbinary", "am", "exist", "identify", "identity", "home", "house", "live", "life", "parent", "parents", "rent", "apartment", "loft", "cottage", "farm", "woods", "goats", "sheep", "cow", "horse", "ride", "solo", "lives", "cat", "meow", "dog", "woof", "coffee", "matcha", "tea", "brew", "pet", "pets", "animals", "comfort", "comfy", "rat", "lizard", "bush", "christmas", "halloween", "thanks", "giving", "tree", "support", "soft", "supportive", "blood", "heart", "family", "zen", "rake", "vacuum", "mow", "platonic", "adopt", "empathy", "grandpa", "grandma", "aunt", "neice", "nephew", "uncle", "cousin", "baby", "babies", "child", "children", "kid", "kids", "bird", "pigeon", "pigeons", "babies", "great", "son", "daughter", "toddler", "homing", "learn", "learning", "education", "school", "elementary", "high", "middle", "cool", "chill", "thought", "thoughtful", "cherish", "rescue", "beach", "grounded", "meditation", "religion", "buddhism", "mormonism", "christianity", "judaism", "jewish", "christian", "mormon", "she", "he", "they", "buddhist", "muslim", "islam", "sikhism", "Sikh", "unitarian", "universalist", "hinduism", "hindu", "taoism", "taoist", "Confucianist", "confucianism", "baptist", "catholic", "evangelical", "hang out", "spend", "together", "pray", "time", "kind", "nice", "sweet", "funny", "hilarious", "squad", "fam", "world", "earth", "planets", "Dinos", "dinosaurs", "rest", "sun", "moon", "ocean", "stars", "thought", "pray", "high", "hobbies", "hobby", "designer", "coding", "computer", "phone"],
@@ -106,82 +43,122 @@ const keywords = {
 
 };
 
-// Handle recognized speech
-function handleSpeech(text, duration) {
-    let matchedCategory = null;
-    let highestMatchCount = 0;
+let audioQueue = [];
+let isAudioPlaying = false;
 
-    for (const [category, words] of Object.entries(keywordCategories)) {
-        let matchCount = words.reduce((count, word) => count + (text.includes(word) ? 1 : 0), 0);
-        if (matchCount > highestMatchCount) {
-            highestMatchCount = matchCount;
-            matchedCategory = category;
-        }
+// Initialize Speech Recognition
+function initializeSpeechRecognition() {
+    if (speechRecognition) return; // Prevent re-initialization
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Your browser does not support speech recognition.");
+        return;
     }
 
-    if (matchedCategory) {
-        console.log(`Category matched: ${matchedCategory}`);
-        playAudioForCategory(matchedCategory, duration);
-        categoryDurations[matchedCategory] += duration;
-    } else {
-        console.log("No category matched, playing default.");
-        playAudioForCategory('conversational', duration);
+    speechRecognition = new SpeechRecognition();
+    speechRecognition.continuous = true;
+    speechRecognition.interimResults = true;
+    speechRecognition.lang = 'en-US';
+
+    speechRecognition.onstart = () => {
+        console.log("Listening...");
+        statusDisplay.textContent = "Listening...";
+        recognizedText = ''; // Clear previous text
+    };
+
+    speechRecognition.onresult = (event) => {
+        const transcript = event.results[event.resultIndex][0].transcript.toLowerCase();
+        recognizedText += ' ' + transcript;
+        console.log("Recognized:", transcript);
+    };
+
+    speechRecognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        stopListening();
+    };
+
+    speechRecognition.onend = () => {
+        console.log("Stopped listening");
+        statusDisplay.textContent = "Not Listening";
+        isListening = false;
+        categorizeAndPlayAudio(recognizedText);
+    };
+}
+
+function startListening() {
+    if (speechRecognition && !isListening) {
+        speechRecognition.start();
+        isListening = true;
+        statusDisplay.textContent = "Listening...";
+    }
+}
+
+function stopListening() {
+    if (speechRecognition && isListening) {
+        speechRecognition.stop();
+        isListening = false;
+    }
+}
+
+// Categorize the recognized text based on keywords
+function categorizeAndPlayAudio(text) {
+    const categoryCounts = {};
+    let totalKeywords = 0;
+
+    // Initialize category counts
+    for (const category in keywords) {
+        categoryCounts[category] = 0;
+    }
+
+    // Count occurrences of each keyword in the text
+    for (const [category, words] of Object.entries(keywords)) {
+        words.forEach(word => {
+            const count = (text.match(new RegExp(`\\b${word}\\b`, 'gi')) || []).length;
+            categoryCounts[category] += count;
+            totalKeywords += count;
+        });
+    }
+
+    // Calculate playback duration based on keyword frequency
+    if (totalKeywords > 0) {
+        for (const category in categoryCounts) {
+            const ratio = categoryCounts[category] / totalKeywords;
+            const duration = Math.round(ratio * 10); // Adjust total playback time (10 seconds as an example)
+            if (duration > 0) playAudioForCategory(category, duration);
+        }
     }
 }
 
 // Play audio based on category
 function playAudioForCategory(category, duration) {
     const audio = audioFiles[category];
-    if (audio) addAudioToQueue(audio, duration);
-}
-
-function addAudioToQueue(audio, duration) {
-    audioQueue.push({ audio, duration });
-    if (!isAudioPlaying) playNextInQueue();
-}
-
-function playNextInQueue() {
-    if (audioQueue.length === 0) {
-        isAudioPlaying = false;
-        return;
+    if (audio) {
+        audio.currentTime = 0;
+        audio.play();
+        setTimeout(() => {
+            audio.pause();
+        }, duration * 1000);
     }
-
-    isAudioPlaying = true;
-    const { audio, duration } = audioQueue.shift();
-    audio.currentTime = 0;
-    audio.play();
-
-    setTimeout(() => {
-        audio.pause();
-        playNextInQueue();
-    }, duration * 1000);
 }
 
 // Spacebar controls for starting/stopping recognition
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space' && !isSpacebarPressed) {
-        console.log("Spacebar pressed - Starting recognition");
-        event.preventDefault(); // Prevent default spacebar action (like scrolling)
+        event.preventDefault();
         isSpacebarPressed = true;
-
-        if (!isListening) {
-            initializeSpeechRecognition();
-            startListening();
-        }
+        initializeSpeechRecognition();
+        startListening();
     }
 });
 
 document.addEventListener('keyup', (event) => {
     if (event.code === 'Space') {
-        console.log("Spacebar released - Stopping recognition");
-        event.preventDefault(); // Prevent default spacebar action
+        event.preventDefault();
         isSpacebarPressed = false;
-
-        if (isListening) {
-            stopListening();
-        }
+        stopListening();
     }
 });
 
-// Ensure initialization when the page loads
+// Initialize on page load
 window.addEventListener('load', initializeSpeechRecognition);
