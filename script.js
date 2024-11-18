@@ -172,7 +172,7 @@ document.addEventListener('keydown', (event) => {
 
 document.addEventListener('keyup', (event) => {
     if (event.code === 'Space') {
-        event.preventDefault();
+        event.preventDefault(); // Prevent default spacebar action
         isSpacebarPressed = false;
 
         if (isListening) {
