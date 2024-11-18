@@ -35,7 +35,7 @@ body {
 .listening {
     background-color: black; /* Background color for listening state */
     font-size: 18pt;
-    color: #000; /* Text color */
+    color: #fff; /* Text color */
     font-style: normal;
     font-weight: normal; /* Make text bold */
     animation: pulse 1s infinite; /* Add a pulsing animation */
