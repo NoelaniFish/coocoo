@@ -160,6 +160,7 @@ function playNextInQueue() {
 // Spacebar controls for starting/stopping recognition
 document.addEventListener('keydown', (event) => {
     if (event.code === 'Space' && !isSpacebarPressed) {
+        console.log("Spacebar pressed - Starting recognition");
         event.preventDefault(); // Prevent default spacebar action (like scrolling)
         isSpacebarPressed = true;
 
@@ -172,6 +173,7 @@ document.addEventListener('keydown', (event) => {
 
 document.addEventListener('keyup', (event) => {
     if (event.code === 'Space') {
+        console.log("Spacebar released - Stopping recognition");
         event.preventDefault(); // Prevent default spacebar action
         isSpacebarPressed = false;
 
