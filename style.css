@@ -1,47 +1,47 @@
+/* Reset default margin and padding for all elements */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Set up the body with a centered layout and background color */
 body {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #000;
-    color: #fff;
-    font-family: 'Helvetica', sans-serif;
-}
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 50px;
-    background-color: #000000;
+    flex-direction: column; /* Arrange content vertically */
+    align-items: center; /* Center content horizontally */
+    justify-content: center; /* Center content vertically */
+    height: 100vh; /* Full viewport height */
+    background-color: #000; /* Black background */
+    font-family: Helvetica, Arial, sans-serif; /* Set font family */
+    text-align: center; /* Center-align all text */
+    color: #fff; /* Default text color */
+    padding: 50px; /* Add padding around content */
 }
 
+/* Style for the centered status message */
 #status {
-    margin-top: 20px;
-    font-size: 24px;
-    color: #555;
+    font-size: 18pt; /* Text size */
+    font-style: italic; /* Italic text */
+    color: white; /* Text color */
+    margin-top: 20px; /* Space above the text */
+    background-color: #333; /* Dark background for the text */
+    padding: 10px; /* Padding around the text */
+    border-radius: 10px; /* Rounded corners */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Subtle shadow for readability */
 }
 
+/* Listening state styles */
 .listening {
-    color: green;
-    font-weight: bold;
-    animation: pulse 1s infinite;
+    background-color: green; /* Background color for listening state */
+    color: #fff; /* Text color */
+    font-weight: bold; /* Make text bold */
+    animation: pulse 1s infinite; /* Add a pulsing animation */
 }
 
+/* Keyframes for the pulsing effect */
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-}
-
-#status {
-    margin-top: 20px;
-    font-size: 18px;
-    background-color: #333;
-    padding: 10px;
-    border-radius: 10px;
-}
-
-.listening {
-    background-color: #FFFFFF;
-    color: #fff;
 }
