@@ -99,7 +99,7 @@ function categorizeAndRespond(text, duration) {
 
         // Count how many keywords from the category are found in the text
         for (const word of words) {
-            if (new RegExp(\\b${word}\\b, 'i').test(text)) {
+            if (new RegExp(`\\b${word}\\b`, 'i').test(text)) {
                 matchCount++;
             }
         }
@@ -113,23 +113,23 @@ function categorizeAndRespond(text, duration) {
 
     // If a category is matched, add it to the queue for playback
     if (matchedCategory) {
-        console.log(Matched category: ${matchedCategory} with text: "${text}");
+        console.log(`Matched category: ${matchedCategory} with text: "${text}"`);
         addToQueue(audios[matchedCategory], duration);
         categoryTimes[matchedCategory] += duration;
     } else {
         // Default to playing the conversational audio if no category is matched
-        console.log(No matching category found for: "${text}". Playing default conversational audio.);
+        console.log(`No matching category found for: "${text}". Playing default conversational audio.`);
         addToQueue(audios.conversational, duration);
     }
 }
 
-// Add audio to the queue
 function addToQueue(audio, duration) {
     audioQueue.push({ audio, duration });
     if (!isPlaying) {
         playNextInQueue();
     }
 }
+
 
 // Play the next sound in the queue
 function playNextInQueue() {
