@@ -1,7 +1,7 @@
 let recognition;
-let statementStartTime, statementEndTime;
-const statusText = document.getElementById('status');
-let isRecognitionActive = false;
+        let isRecognitionActive = false;
+        const statusText = document.getElementById('status');
+
 
 // Track category durations
 const categoryDurations = {
@@ -26,74 +26,6 @@ const audioFiles = {
     wingwhistle: new Audio('wingwhistle.mp3'),
     territorial: new Audio('territorial.mp3')
 };
-
-// Initialize speech recognition
-function initSpeechRecognition() {
-    // Check if browser supports webkitSpeechRecognition
-    if (!('webkitSpeechRecognition' in window)) {
-        alert("Your browser does not support speech recognition. Please use Google Chrome.");
-        return;
-    }
-
-    recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-        statusText.textContent = "Listening...";
-        statusText.classList.add('listening');
-        statementStartTime = new Date().getTime();
-        console.log("Speech recognition started");
-    };
-
-    recognition.onresult = (event) => {
-        statementEndTime = new Date().getTime();
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        const confidence = event.results[event.results.length - 1][0].confidence;
-
-        if (confidence > 0.6) {
-            const duration = (statementEndTime - statementStartTime) / 1000;
-            categorizeAndRespond(transcript, duration);
-        } else {
-            playAudio(audioFiles.conversational);
-        }
-    };
-
-    recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        statusText.textContent = `Error: ${event.error}`;
-        statusText.classList.remove('listening');
-
-        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            alert("Microphone access is blocked. Please check your browser settings.");
-        }
-        isRecognitionActive = false;
-    };
-
-    recognition.onend = () => {
-        console.log("Speech recognition ended.");
-        statusText.textContent = "Idle";
-        statusText.classList.remove('listening');
-
-        if (isRecognitionActive) {
-            setTimeout(() => recognition.start(), 1000); // Restart after a brief pause
-        }
-    };
-
-    // Start recognition
-    try {
-        recognition.start();
-        isRecognitionActive = true;
-        console.log("Speech recognition initialized");
-    } catch (error) {
-        console.error("Error starting speech recognition:", error);
-    }
-}
-
-// Detect category based on keywords
-function detectCategory(text) {
-   // Ensure the keywords object is defined
 const keywords = {
    homing: ["love", "friends", "left", "red", "blue", "yellow", "orange", "black", "brown", "purple", "grass", "bug", "white", "yep", "besties", "pals", "amigos", "support", "hug", "calm", "comfort", "love of my life", "I love you", "marry me", "chosen family", "you mean the world", "pets", "mom", "mami", "mommy", "mama", "moms", "mother", "father", "papa", "daddy", "dad", "dads", "siblings", "doggo", "home", "meadow", "nature", "brother", "bro", "sis", "sister", "sistah", "sibling", "nonbinary", "am", "exist", "identify", "identity", "home", "house", "live", "life", "parent", "parents", "rent", "apartment", "loft", "cottage", "farm", "woods", "goats", "sheep", "cow", "horse", "ride", "solo", "lives", "cat", "meow", "dog", "woof", "coffee", "matcha", "tea", "brew", "pet", "pets", "animals", "comfort", "comfy", "rat", "lizard", "bush", "christmas", "halloween", "thanks", "giving", "tree", "support", "soft", "supportive", "blood", "heart", "family", "zen", "rake", "vacuum", "mow", "platonic", "adopt", "empathy", "grandpa", "grandma", "aunt", "neice", "nephew", "uncle", "cousin", "baby", "babies", "child", "children", "kid", "kids", "bird", "pigeon", "pigeons", "babies", "great", "son", "daughter", "toddler", "homing", "learn", "learning", "education", "school", "elementary", "high", "middle", "cool", "chill", "thought", "thoughtful", "cherish", "rescue", "beach", "grounded", "meditation", "religion", "buddhism", "mormonism", "christianity", "judaism", "jewish", "christian", "mormon", "she", "he", "they", "buddhist", "muslim", "islam", "sikhism", "Sikh", "unitarian", "universalist", "hinduism", "hindu", "taoism", "taoist", "Confucianist", "confucianism", "baptist", "catholic", "evangelical", "hang out", "spend", "together", "pray", "time", "kind", "nice", "sweet", "funny", "hilarious", "squad", "fam", "world", "earth", "planets", "Dinos", "dinosaurs", "rest", "sun", "moon", "ocean", "stars", "thought", "pray", "high", "hobbies", "hobby", "designer", "coding", "computer", "phone"],
     aggressive: ["hate", "disgust", "you disgust me", "I hate you", "fuck no", "I hate pigeons", "fuck you", "tear", "angry", "mad", "destroy", "beat down", "crush them", "burn", "cut", "kill", "murder", "rage", "furious", "break", "bitch", "damn", "fight", "pussy", "threat", "threaten", "violent", "violence", "revenge", "war", "homicide", "terrorist", "nazi", "hater", "bully", "killer", "rape", "rapist", "explode", "gun", "bomb", "genocide", "overpower", "dominate", "obliterate", "annihilate", "rage full", "wrath", "fury", "unleash", "explode", "retaliate", "yell", "scream", "shout", "vengeance", "boxing", "punch", "kick", "bruise", "ugh", "racist", "sexist", "homophobe", "ableist", "fatphobic", "pissed", "annoying", "triggered", "cancel", "cancel culture", "kamikaze", "atomic", "weapon", "destruction", "mass", "abuse", "abusive", "bulldoze", "toxic", "triggered", "agh", "eee", "errr", "no", "ugh", "shit", "alpha", "clap back"],
@@ -107,35 +39,71 @@ const keywords = {
 
 };
 
+ // Initialize Speech Recognition
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Your browser does not support speech recognition. Please use Google Chrome.");
+                return;
+            }
 
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
 
-    for (const [category, words] of Object.entries(keywords)) {
-        if (words.some(word => text.includes(word))) {
-            return category;
+            recognition.onstart = () => {
+                statusText.textContent = "Listening...";
+                isRecognitionActive = true;
+                console.log("Speech recognition started");
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                const confidence = event.results[event.results.length - 1][0].confidence;
+
+                if (confidence > 0.6) {
+                    console.log("Transcript:", transcript);
+                    detectKeywordsAndPlayAudio(transcript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                statusText.textContent = `Error: ${event.error}`;
+                isRecognitionActive = false;
+            };
+
+            recognition.onend = () => {
+                console.log("Speech recognition ended.");
+                statusText.textContent = "Recognition ended. Click to restart.";
+                isRecognitionActive = false;
+            };
+
+            recognition.start();
+            isRecognitionActive = true;
         }
-    }
-    return 'conversational';
-}
 
-// Categorize and respond based on spoken input
-function categorizeAndRespond(text, duration) {
-    const category = detectCategory(text);
-    categoryDurations[category] += duration;
-    console.log(`Category: ${category}, Duration: ${duration}s`);
-    playAudio(audioFiles[category]);
-}
+        // Detect keywords and play corresponding audio
+        function detectKeywordsAndPlayAudio(transcript) {
+            for (const [category, words] of Object.entries(keywords)) {
+                if (words.some(word => transcript.includes(word))) {
+                    console.log(`Keyword detected: ${category}`);
+                    playAudio(audioFiles[category]);
+                }
+            }
+        }
 
-// Play audio without stopping previous sounds
-function playAudio(audio) {
-    if (audio) {
-        const clonedAudio = audio.cloneNode(); // Allow overlapping sounds
-        clonedAudio.play();
-    }
-}
+        // Play audio without stopping previous sounds
+        function playAudio(audio) {
+            if (audio) {
+                const clonedAudio = audio.cloneNode(); // Allow overlapping sounds
+                clonedAudio.play();
+            }
+        }
 
-// Start speech recognition when the page loads
-window.onload = () => {
-    initSpeechRecognition();
-};
+        // Start speech recognition when the page loads
+        window.onload = () => {
+            console.log("Page loaded, ready to start listening...");
+        };
 
 
