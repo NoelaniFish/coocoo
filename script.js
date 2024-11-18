@@ -4,29 +4,27 @@ const statusText = document.getElementById('status');
 let isRecognitionActive = false;
 
 const categoryTimes = {
-    conversational: 0,
+    greeting: 0,
     motherly: 0,
     aggressive: 0,
     defensive: 0,
-    mating: 0,
-    wingwhistle: 0,
-    grunt: 0,
+    flirtatious: 0,
+    danger: 0,
+    terrified: 0,
     territorial: 0
 };
+
 // Load audio files
 const audios = {
-    conversational: new Audio('conversational.mp3'),
-    homing: new Audio('homing.mp3'),
-    moan: new Audio('moan.mp3),
+    greeting: new Audio('coo-greeting.mp3'),
+    motherly: new Audio('motherly-nuturing.mp3'),
     aggressive: new Audio('aggressive.mp3'),
     defensive: new Audio('defensive.mp3'),
-    mating: new Audio('mating.mp3'),
-    grunt: new Audio('grunt.mp3'),
-    wingwhistle: new Audio('wingwhistle.mp3'),
-    territorial: new Audio('territorial.mp3')
-    
+    flirtatious: new Audio('flirtatious.mp3'),
+    danger: new Audio('potential-danger.mp3'),
+    terrified: new Audio('terrified-petrified-grunts.mp3'),
+    territorial: new Audio('territorial-soft.mp3')
 };
-
 // Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
