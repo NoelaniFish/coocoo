@@ -93,16 +93,39 @@ const keywords = {
 
 };
 
-// Detect category based on keywords and add to queue
+// Function to categorize and respond based on recognized text
 function categorizeAndRespond(text, duration) {
+    let matchedCategory = null;
+    let highestMatchCount = 0;
+
+    // Check each category for matching keywords and prioritize the category with the most matches
     for (const [category, words] of Object.entries(keywords)) {
-        if (words.some(word => new RegExp(`\\b${word}\\b`, 'i').test(text))) {
-            addToQueue(audios[category], duration);
-            categoryTimes[category] += duration;
-            break;
+        let matchCount = 0;
+
+        // Count how many keywords from the category are found in the text
+        for (const word of words) {
+            if (new RegExp(`\\b${word}\\b`, 'i').test(text)) {
+                matchCount++;
+            }
+        }
+
+        // Update the category if this one has more matches
+        if (matchCount > highestMatchCount) {
+            highestMatchCount = matchCount;
+            matchedCategory = category;
         }
     }
+
+    // If a category is matched, add it to the queue for playback
+    if (matchedCategory) {
+        console.log(`Matched category: ${matchedCategory} with text: "${text}"`);
+        addToQueue(audios[matchedCategory], duration);
+        categoryTimes[matchedCategory] += duration;
+    } else {
+        console.log("No matching category found");
+    }
 }
+
 
 // Add audio to the queue
 function addToQueue(audio, duration) {
