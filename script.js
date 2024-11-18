@@ -2,7 +2,7 @@ let recognition = null;
 let isRecognitionActive = false;
 let statementStartTime = 0;
 let statementEndTime = 0;
-const statusText = document.getElementById('statusText'); // Make sure there's an element with this ID
+const statusText = document.getElementById('statusText');
 
 const categoryTimes = {
     conversational: 0,
@@ -49,8 +49,14 @@ async function initSpeechRecognition() {
 }
 
 // Function to start speech recognition
-function startRecognition() {
-    recognition = new webkitSpeechRecognition();
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Your browser does not support speech recognition.");
+        return;
+    }
+
+    recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
@@ -58,46 +64,42 @@ function startRecognition() {
     recognition.onstart = () => {
         console.log("Speech recognition started");
         statusText.textContent = "Listening...";
-        statusText.classList.add('listening');
-        statementStartTime = new Date().getTime();
     };
 
     recognition.onresult = (event) => {
-        statementEndTime = new Date().getTime();
         const transcript = event.results[0][0].transcript.toLowerCase();
         console.log("Recognized text:", transcript);
-        const confidence = event.results[0][0].confidence;
-
-        if (confidence > 0.6 && transcript.trim().length > 5) {
-            const duration = (statementEndTime - statementStartTime) / 1000;
-            categorizeAndRespond(transcript, duration);
-        }
-    };
-
-    recognition.onspeechend = () => {
-        console.log("Speech ended");
-        stopRecognition();
-        playCategorizedAudio();
     };
 
     recognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        statusText.textContent = "Error: " + event.error;
-        statusText.classList.remove('listening');
+        alert(`Error: ${event.error}`);
         stopRecognition();
     };
 
     recognition.onend = () => {
         console.log("Speech recognition ended");
-        isRecognitionActive = false;
         statusText.textContent = "Not Listening";
-        statusText.classList.remove('listening');
     };
-
-    recognition.start();
-    console.log("Recognition started");
 }
 
+function startRecognition() {
+    if (recognition) recognition.start();
+}
+
+function stopRecognition() {
+    if (recognition) recognition.stop();
+}
+
+document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space') {
+        startRecognition();
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    stopRecognition();
+});
 // Function to stop recognition
 function stopRecognition() {
     if (recognition) {
