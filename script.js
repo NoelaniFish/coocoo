@@ -3,6 +3,16 @@ let statementStartTime, statementEndTime;
 const statusText = document.getElementById('status');
 let isRecognitionActive = false;
 
+const categoryTimes = {
+    conversational: 0,
+    motherly: 0,
+    aggressive: 0,
+    defensive: 0,
+    mating: 0,
+    wingwhistle: 0,
+    grunt: 0,
+    territorial: 0
+};
 // Load audio files
 const audios = {
     conversational: new Audio('conversational.mp3'),
@@ -25,8 +35,8 @@ function initSpeechRecognition() {
     }
 
     recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
@@ -34,6 +44,7 @@ function initSpeechRecognition() {
         statusText.classList.add('listening');
         statementStartTime = new Date().getTime();
     };
+
 
     recognition.onresult = (event) => {
         statementEndTime = new Date().getTime();
@@ -92,9 +103,96 @@ function categorizeAndRespond(text, duration) {
         }
     }
 
-    playAudioForDuration(audio, duration);
+   recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+        statusText.textContent = "Listening...";
+        statusText.classList.add('listening');
+        statementStartTime = new Date().getTime();
+    };
+ recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+        statusText.textContent = "Listening...";
+        statusText.classList.add('listening');
+        statementStartTime = new Date().getTime();
+    };
+
+    let currentCategory = null;
+    let categoryStartTime = null;
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        const confidence = event.results[event.results.length - 1][0].confidence;
+
+        if (confidence > 0.6) {
+            const category = detectCategory(transcript);
+            
+            // Handle category changes
+            if (category !== currentCategory) {
+                if (currentCategory) {
+                    const categoryDuration = (new Date().getTime() - categoryStartTime) / 1000;
+                    categoryTimes[currentCategory] += categoryDuration;
+                }
+                currentCategory = category;
+                categoryStartTime = new Date().getTime();
+            }
+        }
+    };
+
+    recognition.onspeechend = () => {
+        // Stop tracking time for the last category
+        if (currentCategory) {
+            const categoryDuration = (new Date().getTime() - categoryStartTime) / 1000;
+            categoryTimes[currentCategory] += categoryDuration;
+        }
+        recognition.stop();
+        statusText.textContent = "Not Listening";
+        statusText.classList.remove('listening');
+
+        // Play back the audio files based on accumulated times
+        playCategorizedAudio();
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        statusText.textContent = "Error: " + event.error;
+        statusText.classList.remove('listening');
+    };
+
+    recognition.onend = () => {
+        isRecognitionActive = false;
+        console.log("Recognition ended.");
+    };
 }
 
+// Detect category based on keywords
+function detectCategory(text) {
+    for (const [category, words] of Object.entries(keywords)) {
+        if (words.some(word => new RegExp(`\\b${word}\\b`, 'i').test(text))) {
+            return category;
+        }
+    }
+    return 'greeting';
+}
+
+// Play audio files based on the time accumulated in each category
+function playCategorizedAudio() {
+    for (const [category, time] of Object.entries(categoryTimes)) {
+        if (time > 0) {
+            console.log(`Playing ${category} for ${time} seconds.`);
+            playAudioForDuration(audios[category], time);
+        }
+    }
+}
+
+// Play audio for a specific duration
 function playAudioForDuration(audio, duration) {
     audio.currentTime = 0;
     audio.play();
@@ -104,7 +202,7 @@ function playAudioForDuration(audio, duration) {
     }, duration * 1000);
 }
 
-// Event listeners for mouse clicks
+// Event listeners to start/stop speech recognition
 document.addEventListener('mousedown', () => {
     if (!isRecognitionActive) {
         initSpeechRecognition();
