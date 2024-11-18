@@ -7,6 +7,13 @@
 
 /* Set up the body with a centered layout and background color */
 body {
+    margin: 0;
+    padding: 0;
+    background-image: url('pigeon.png'); /* Adjust the file path if needed */
+    background-size: cover; /* Ensures the image covers the entire background */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    background-attachment: fixed; /* Keeps the background fixed when scrolling */
     display: flex;
     flex-direction: column; /* Arrange content vertically */
     align-items: center; /* Center content horizontally */
