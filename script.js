@@ -3,7 +3,6 @@ let statementStartTime, statementEndTime;
 const statusText = document.getElementById('status');
 let isRecognitionActive = false;
 
-
 // Track category durations
 const categoryDurations = {
     conversational: 0,
@@ -28,7 +27,14 @@ const audioFiles = {
     territorial: new Audio('territorial.mp3')
 };
 
-recognition = new webkitSpeechRecognition();
+// Initialize speech recognition
+function initSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        alert("Please use Google Chrome for this feature.");
+        return;
+    }
+
+    recognition = new webkitSpeechRecognition();
     recognition.continuous = true; // Continuous listening
     recognition.interimResults = false;
     recognition.lang = 'en-US';
@@ -62,6 +68,9 @@ recognition = new webkitSpeechRecognition();
         console.log("Recognition ended, restarting...");
         recognition.start(); // Restart recognition for continuous listening
     };
+
+    recognition.start();
+    isRecognitionActive = true;
 }
 
 // Detect category based on keywords
@@ -93,8 +102,6 @@ function playAudio(audio) {
 // Start speech recognition immediately when the page loads
 window.onload = () => {
     initSpeechRecognition();
-    recognition.start();
-    isRecognitionActive = true;
 };
 
 // Ensure the keywords object is defined
