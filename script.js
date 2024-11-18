@@ -150,7 +150,6 @@ function playNextInQueue() {
     }, duration * 1000);
 }
 
-let spacebarPressed = false; // Track spacebar state
 
 // Event listeners for spacebar control
 document.addEventListener('keydown', (event) => {
