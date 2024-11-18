@@ -93,7 +93,7 @@ const keywords = {
 
 };
 
-// Function to categorize and respond based on recognized text
+/// Function to categorize and respond based on recognized text
 function categorizeAndRespond(text, duration) {
     let matchedCategory = null;
     let highestMatchCount = 0;
@@ -122,10 +122,11 @@ function categorizeAndRespond(text, duration) {
         addToQueue(audios[matchedCategory], duration);
         categoryTimes[matchedCategory] += duration;
     } else {
-        console.log("No matching category found");
+        // Default to playing the conversational audio if no category is matched
+        console.log(`No matching category found for: "${text}". Playing default conversational audio.`);
+        addToQueue(audios.conversational, duration);
     }
 }
-
 
 // Add audio to the queue
 function addToQueue(audio, duration) {
