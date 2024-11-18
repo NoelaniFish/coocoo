@@ -61,7 +61,7 @@ function initSpeechRecognition() {
 
     recognition.onspeechend = () => {
         stopRecognition();
-        playCategorizedAudio();
+        playNextInQueue();
     };
 
     recognition.onerror = (event) => {
@@ -93,36 +93,31 @@ const keywords = {
 
 };
 
-/// Function to categorize and respond based on recognized text
+// Function to categorize and respond based on recognized text
 function categorizeAndRespond(text, duration) {
     let matchedCategory = null;
     let highestMatchCount = 0;
 
-    // Check each category for matching keywords and prioritize the category with the most matches
     for (const [category, words] of Object.entries(keywords)) {
         let matchCount = 0;
 
-        // Count how many keywords from the category are found in the text
         for (const word of words) {
             if (new RegExp(`\\b${word}\\b`, 'i').test(text)) {
                 matchCount++;
             }
         }
 
-        // Update the category if this one has more matches
         if (matchCount > highestMatchCount) {
             highestMatchCount = matchCount;
             matchedCategory = category;
         }
     }
 
-    // If a category is matched, add it to the queue for playback
     if (matchedCategory) {
         console.log(`Matched category: ${matchedCategory} with text: "${text}"`);
         addToQueue(audios[matchedCategory], duration);
         categoryTimes[matchedCategory] += duration;
     } else {
-        // Default to playing the conversational audio if no category is matched
         console.log(`No matching category found for: "${text}". Playing default conversational audio.`);
         addToQueue(audios.conversational, duration);
     }
@@ -143,16 +138,18 @@ function playNextInQueue() {
         return;
     }
 
-    isPlaying = true;
     const { audio, duration } = audioQueue.shift();
+    isPlaying = true;
 
     // Play the audio for the specified duration
     audio.currentTime = 0;
     audio.play();
 
+    // Ensure the audio stops playing after the specified duration
     setTimeout(() => {
         audio.pause();
         audio.currentTime = 0;
+        isPlaying = false;
         playNextInQueue();
     }, duration * 1000);
 }
