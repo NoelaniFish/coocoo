@@ -1,41 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
-    <title>Pigeon Translator</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition with Audio Playback</title>
+    <style>
+        #status {
+            font-size: 1.5em;
+            margin-top: 20px;
+            color: green;
+        }
+    </style>
 </head>
 <body>
- <button onclick="startMicrophone()">Start Microphone</button>
-    <div id="status">Idle</div>
-    <script>
-        async function startMicrophone() {
-            const statusText = document.getElementById('status');
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                statusText.textContent = "Microphone access granted!";
-                
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const source = audioContext.createMediaStreamSource(stream);
-                const analyser = audioContext.createAnalyser();
-
-                source.connect(analyser);
-                analyser.fftSize = 2048;
-
-                const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-                function analyzeAudio() {
-                    analyser.getByteFrequencyData(dataArray);
-                    const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-                    console.log("Volume:", volume);
-                    requestAnimationFrame(analyzeAudio);
-                }
-                analyzeAudio();
-            } catch (error) {
-                console.error("Error accessing microphone:", error);
-                statusText.textContent = "Microphone access denied!";
-            }
-        }
+    <h2>Microphone Speech Recognition</h2>
+    <button onclick="initSpeechRecognition()">Start Listening</button>
+    <div id="status">Click the button to start listening...</div>
     </script>
     <h1>PIGEON TRANSLATOR</h1>
     <p id="status">Not Listening</p>
