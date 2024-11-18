@@ -4,6 +4,7 @@ let isListening = false;
 let recognizedText = '';
 const statusDisplay = document.getElementById('statusText');
 
+
 // Keyword categories
 const keywords = {
    homing: ["love", "friends", "left", "red", "blue", "yellow", "orange", "black", "brown", "purple", "grass", "bug", "white", "yep", "besties", "pals", "amigos", "support", "hug", "calm", "comfort", "love of my life", "I love you", "marry me", "chosen family", "you mean the world", "pets", "mom", "mami", "mommy", "mama", "moms", "mother", "father", "papa", "daddy", "dad", "dads", "siblings", "doggo", "home", "meadow", "nature", "brother", "bro", "sis", "sister", "sistah", "sibling", "nonbinary", "am", "exist", "identify", "identity", "home", "house", "live", "life", "parent", "parents", "rent", "apartment", "loft", "cottage", "farm", "woods", "goats", "sheep", "cow", "horse", "ride", "solo", "lives", "cat", "meow", "dog", "woof", "coffee", "matcha", "tea", "brew", "pet", "pets", "animals", "comfort", "comfy", "rat", "lizard", "bush", "christmas", "halloween", "thanks", "giving", "tree", "support", "soft", "supportive", "blood", "heart", "family", "zen", "rake", "vacuum", "mow", "platonic", "adopt", "empathy", "grandpa", "grandma", "aunt", "neice", "nephew", "uncle", "cousin", "baby", "babies", "child", "children", "kid", "kids", "bird", "pigeon", "pigeons", "babies", "great", "son", "daughter", "toddler", "homing", "learn", "learning", "education", "school", "elementary", "high", "middle", "cool", "chill", "thought", "thoughtful", "cherish", "rescue", "beach", "grounded", "meditation", "religion", "buddhism", "mormonism", "christianity", "judaism", "jewish", "christian", "mormon", "she", "he", "they", "buddhist", "muslim", "islam", "sikhism", "Sikh", "unitarian", "universalist", "hinduism", "hindu", "taoism", "taoist", "Confucianist", "confucianism", "baptist", "catholic", "evangelical", "hang out", "spend", "together", "pray", "time", "kind", "nice", "sweet", "funny", "hilarious", "squad", "fam", "world", "earth", "planets", "Dinos", "dinosaurs", "rest", "sun", "moon", "ocean", "stars", "thought", "pray", "high", "hobbies", "hobby", "designer", "coding", "computer", "phone"],
@@ -44,11 +45,7 @@ const audioFiles = {
 };
 
 
-let audioQueue = [];
-let isAudioPlaying = false;
-
 // Initialize Speech Recognition
-/ Initialize Speech Recognition
 function initializeSpeechRecognition() {
     if (speechRecognition) return;
 
@@ -59,43 +56,49 @@ function initializeSpeechRecognition() {
     }
 
     speechRecognition = new SpeechRecognition();
-    speechRecognition.continuous = true;
-    speechRecognition.interimResults = true;
+    speechRecognition.continuous = false;
+    speechRecognition.interimResults = false;
     speechRecognition.lang = 'en-US';
 
-    speechRecognition.onstart = () => {
-        setListeningStatus(true);
-        recognizedText = '';
-    };
-
     speechRecognition.onresult = (event) => {
-        const transcript = event.results[event.resultIndex][0].transcript.toLowerCase();
+        const transcript = event.results[0][0].transcript.toLowerCase();
         recognizedText += ' ' + transcript;
+        console.log("Recognized:", transcript);
     };
 
     speechRecognition.onerror = (event) => {
         console.error("Speech recognition error:", event.error);
-        stopListening();
-    };
-
-    speechRecognition.onend = () => {
-        setListeningStatus(false);
-        categorizeAndPlayAudio(recognizedText);
     };
 }
 
-// Function to update status text and apply animation
+function startListening() {
+    return new Promise((resolve) => {
+        if (speechRecognition && !isListening) {
+            recognizedText = '';
+            setListeningStatus(true);
+            speechRecognition.start();
+            isListening = true;
+            speechRecognition.onend = resolve;
+        }
+    });
+}
+
+function stopListening() {
+    return new Promise((resolve) => {
+        if (speechRecognition && isListening) {
+            speechRecognition.stop();
+            isListening = false;
+            setListeningStatus(false);
+            resolve();
+        }
+    });
+}
+
 function setListeningStatus(isListening) {
-    if (isListening) {
-        statusDisplay.textContent = "Listening...";
-        statusDisplay.classList.add('listening');
-    } else {
-        statusDisplay.textContent = "Not Listening";
-        statusDisplay.classList.remove('listening');
-    }
+    statusDisplay.textContent = isListening ? "Listening..." : "Not Listening";
+    statusDisplay.classList.toggle('listening', isListening);
 }
 
-// Function to categorize recognized text and play audio
 function categorizeAndPlayAudio(text) {
     const categoryCounts = {};
     let totalKeywords = 0;
@@ -118,55 +121,43 @@ function categorizeAndPlayAudio(text) {
     if (totalKeywords > 0) {
         for (const category in categoryCounts) {
             const ratio = categoryCounts[category] / totalKeywords;
-            const duration = Math.round(ratio * 10); // Adjust total playback time (10 seconds)
+            const duration = Math.round(ratio * 5); // 5 seconds max per category
             if (duration > 0) playAudioForCategory(category, duration);
         }
     }
 }
 
-// Function to play audio for a given category
 function playAudioForCategory(category, duration) {
     const audio = audioFiles[category];
     if (audio) {
         audio.currentTime = 0;
         audio.play();
+        audio.addEventListener('ended', () => {
+            audio.pause();
+        });
         setTimeout(() => {
             audio.pause();
         }, duration * 1000);
     }
 }
 
-// Spacebar controls for starting/stopping recognition
-document.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', async (event) => {
     if (event.code === 'Space' && !isSpacebarPressed) {
         event.preventDefault();
         isSpacebarPressed = true;
-        initializeSpeechRecognition();
-        startListening();
+        await initializeSpeechRecognition();
+        await startListening();
     }
 });
 
-document.addEventListener('keyup', (event) => {
+document.addEventListener('keyup', async (event) => {
     if (event.code === 'Space') {
         event.preventDefault();
         isSpacebarPressed = false;
-        stopListening();
+        await stopListening();
+        categorizeAndPlayAudio(recognizedText);
     }
 });
 
-function startListening() {
-    if (speechRecognition && !isListening) {
-        speechRecognition.start();
-        isListening = true;
-    }
-}
-
-function stopListening() {
-    if (speechRecognition && isListening) {
-        speechRecognition.stop();
-        isListening = false;
-    }
-}
-
-// Initialize when the page loads
+// Initialize on page load
 window.addEventListener('load', initializeSpeechRecognition);
