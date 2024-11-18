@@ -1,7 +1,10 @@
 let recognition;
-        let isRecognitionActive = false;
-        const statusText = document.getElementById('status');
+let isRecognitionActive = false;
+const statusText = document.getElementById('status');
 
+// Track category durations and queue
+const categoryDurations = {};
+const audioQueue = [];
 
 // Track category durations
 const categoryDurations = {
@@ -39,7 +42,7 @@ const keywords = {
 
 };
 
-// Initialize Speech Recognition
+// Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
         alert("Your browser does not support speech recognition. Please use Google Chrome.");
@@ -62,7 +65,7 @@ function initSpeechRecognition() {
 
         if (confidence > 0.6) {
             console.log("Transcript:", transcript);
-            detectKeywordsAndPlayAudio(transcript);
+            processTranscript(transcript);
         }
     };
 
@@ -78,28 +81,62 @@ function initSpeechRecognition() {
     };
 }
 
-// Detect keywords and play corresponding audio
-function detectKeywordsAndPlayAudio(transcript) {
+// Process the transcript and update durations
+function processTranscript(transcript) {
+    let matchedCategory = null;
+
+    // Check each category for matching keywords
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => transcript.includes(word))) {
-            console.log(`Keyword detected: ${category}`);
-            playAudio(audioFiles[category]);
+            matchedCategory = category;
+            categoryDurations[category] = (categoryDurations[category] || 0) + 3; // Add 3 seconds for match
+            break;
+        }
+    }
+
+    if (!matchedCategory) {
+        categoryDurations.conversational = (categoryDurations.conversational || 0) + 3; // Default to conversational
+        matchedCategory = 'conversational';
+    }
+
+    console.log(`Matched Category: ${matchedCategory}, Duration: ${categoryDurations[matchedCategory]} seconds`);
+    queueAudio(matchedCategory);
+}
+
+// Queue audio playback
+function queueAudio(category) {
+    if (!audioQueue.includes(category)) {
+        audioQueue.push(category);
+        if (audioQueue.length === 1) {
+            playNextAudio();
         }
     }
 }
 
-// Play audio without stopping previous sounds
-function playAudio(audio) {
+// Play the next audio in the queue
+function playNextAudio() {
+    if (audioQueue.length === 0) return;
+
+    const category = audioQueue[0];
+    const audio = audioFiles[category];
+    const duration = categoryDurations[category] || 3; // Default duration is 3 seconds
+
     if (audio) {
-        const clonedAudio = audio.cloneNode(); // Allow overlapping sounds
-        clonedAudio.play();
+        audio.play();
+        console.log(`Playing ${category} for ${duration} seconds`);
+
+        // Remove category from queue after playback
+        setTimeout(() => {
+            audioQueue.shift();
+            playNextAudio();
+        }, duration * 1000);
     }
 }
 
 // Start/Stop speech recognition on spacebar press
 function handleKeydown(event) {
     if (event.code === 'Space' && !isRecognitionActive) {
-        event.preventDefault(); // Prevent default spacebar action
+        event.preventDefault();
         startRecognition();
     }
 }
