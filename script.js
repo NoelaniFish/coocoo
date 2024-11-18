@@ -44,24 +44,20 @@ function initSpeechRecognition() {
     };
 
 
-    recognition.onresult = (event) => {
+   recognition.onresult = (event) => {
         statementEndTime = new Date().getTime();
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        const confidence = event.results[0][0].confidence;
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        const confidence = event.results[event.results.length - 1][0].confidence;
         const transcriptLength = transcript.trim().length;
 
         if (confidence > 0.6 && transcriptLength > 5) {
             const duration = (statementEndTime - statementStartTime) / 1000;
             categorizeAndRespond(transcript, duration);
-        } else {
-            playAudioForDuration(audios.greeting, 2);
         }
     };
-
-    recognition.onspeechend = () => {
-        recognition.stop();
-        statusText.textContent = "Not Listening";
-        statusText.classList.remove('listening');
+recognition.onspeechend = () => {
+        stopRecognition();
+        playCategorizedAudio();
     };
 
     recognition.onerror = (event) => {
@@ -72,7 +68,8 @@ function initSpeechRecognition() {
 
     recognition.onend = () => {
         isRecognitionActive = false;
-        console.log("Recognition ended.");
+        statusText.textContent = "Not Listening";
+        statusText.classList.remove('listening');
     };
 }
 
@@ -90,96 +87,19 @@ const keywords = {
 
 };
 
+// Detect category based on keywords
 function categorizeAndRespond(text, duration) {
-    let audio = audios.greeting;
-
+    let audio = audios.conversational;
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => new RegExp(`\\b${word}\\b`, 'i').test(text))) {
             audio = audios[category];
+            categoryTimes[category] += duration;
             break;
         }
     }
-
-   recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-        statusText.textContent = "Listening...";
-        statusText.classList.add('listening');
-        statementStartTime = new Date().getTime();
-    };
- recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-        statusText.textContent = "Listening...";
-        statusText.classList.add('listening');
-        statementStartTime = new Date().getTime();
-    };
-
-    let currentCategory = null;
-    let categoryStartTime = null;
-
-    recognition.onresult = (event) => {
-        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        const confidence = event.results[event.results.length - 1][0].confidence;
-
-        if (confidence > 0.6) {
-            const category = detectCategory(transcript);
-            
-            // Handle category changes
-            if (category !== currentCategory) {
-                if (currentCategory) {
-                    const categoryDuration = (new Date().getTime() - categoryStartTime) / 1000;
-                    categoryTimes[currentCategory] += categoryDuration;
-                }
-                currentCategory = category;
-                categoryStartTime = new Date().getTime();
-            }
-        }
-    };
-
-    recognition.onspeechend = () => {
-        // Stop tracking time for the last category
-        if (currentCategory) {
-            const categoryDuration = (new Date().getTime() - categoryStartTime) / 1000;
-            categoryTimes[currentCategory] += categoryDuration;
-        }
-        recognition.stop();
-        statusText.textContent = "Not Listening";
-        statusText.classList.remove('listening');
-
-        // Play back the audio files based on accumulated times
-        playCategorizedAudio();
-    };
-
-    recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        statusText.textContent = "Error: " + event.error;
-        statusText.classList.remove('listening');
-    };
-
-    recognition.onend = () => {
-        isRecognitionActive = false;
-        console.log("Recognition ended.");
-    };
 }
 
-// Detect category based on keywords
-function detectCategory(text) {
-    for (const [category, words] of Object.entries(keywords)) {
-        if (words.some(word => new RegExp(`\\b${word}\\b`, 'i').test(text))) {
-            return category;
-        }
-    }
-    return 'greeting';
-}
-
-// Play audio files based on the time accumulated in each category
+// Play audio based on accumulated time
 function playCategorizedAudio() {
     for (const [category, time] of Object.entries(categoryTimes)) {
         if (time > 0) {
@@ -189,7 +109,7 @@ function playCategorizedAudio() {
     }
 }
 
-// Play audio for a specific duration
+// Play audio for a specified duration
 function playAudioForDuration(audio, duration) {
     audio.currentTime = 0;
     audio.play();
@@ -199,18 +119,19 @@ function playAudioForDuration(audio, duration) {
     }, duration * 1000);
 }
 
-// Event listeners to start/stop speech recognition
+function stopRecognition() {
+    if (recognition) {
+        recognition.stop();
+        statusText.textContent = "Not Listening";
+        statusText.classList.remove('listening');
+    }
+}
+
+/ Event listeners for starting/stopping speech recognition
 document.addEventListener('mousedown', () => {
     if (!isRecognitionActive) {
         initSpeechRecognition();
         recognition.start();
         isRecognitionActive = true;
-    }
-});
-
-document.addEventListener('mouseup', () => {
-    if (isRecognitionActive) {
-        recognition.stop();
-        isRecognitionActive = false;
     }
 });
