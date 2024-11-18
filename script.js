@@ -25,7 +25,7 @@ const audios = {
     wingwhistle: new Audio('wingwhistle.mp3'),
     territorial: new Audio('territorial.mp3')
 };
-Initialize speech recognition
+// Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
         alert("Please use Google Chrome for this feature.");
