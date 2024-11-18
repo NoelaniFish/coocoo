@@ -13,7 +13,7 @@ body {
     justify-content: center; /* Center content vertically */
     height: 100vh; /* Full viewport height */
     background-color: #000; /* Black background */
-    font-family: Helvetica, Arial, sans-serif; /* Set font family */
+    font-family: Helvetica, sans-serif; /* Set font family */
     text-align: center; /* Center-align all text */
     color: #fff; /* Default text color */
     padding: 50px; /* Add padding around content */
