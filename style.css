@@ -27,6 +27,27 @@ body {
     padding: 50px; /* Add padding around content */
 }
 
+h1 {
+    margin: 0;
+    padding: 0;
+    background-image: url('pigeon.png'); /* Adjust the file path if needed */
+    background-size: cover; /* Ensures the image covers the entire background */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    background-attachment: fixed; /* Keeps the background fixed when scrolling */
+    display: flex;
+    flex-direction: column; /* Arrange content vertically */
+    align-items: center; /* Center content horizontally */
+    justify-content: center; /* Center content vertically */
+    height: 100vh; /* Full viewport height */
+    background-color: #000; /* Black background */
+    font-size: 36pt; /* Text size */
+    font-family: Helvetica, sans-serif; /* Set font family */
+    text-align: center; /* Center-align all text */
+    color: #fff; /* Default text color */
+    padding: 50px; /* Add padding around content */
+}
+
 /* Style for the centered status message */
 #status {
     font-size: 10pt; /* Text size */
