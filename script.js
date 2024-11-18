@@ -2,10 +2,6 @@ let recognition;
 let isRecognitionActive = false;
 const statusText = document.getElementById('status');
 
-// Track category durations and queue
-const categoryDurations = {};
-const audioQueue = [];
-
 // Track category durations
 const categoryDurations = {
     conversational: 0,
@@ -85,7 +81,6 @@ function initSpeechRecognition() {
 function processTranscript(transcript) {
     let matchedCategory = null;
 
-    // Check each category for matching keywords
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => transcript.includes(word))) {
             matchedCategory = category;
@@ -119,13 +114,12 @@ function playNextAudio() {
 
     const category = audioQueue[0];
     const audio = audioFiles[category];
-    const duration = categoryDurations[category] || 3; // Default duration is 3 seconds
+    const duration = categoryDurations[category] || 3;
 
     if (audio) {
         audio.play();
         console.log(`Playing ${category} for ${duration} seconds`);
 
-        // Remove category from queue after playback
         setTimeout(() => {
             audioQueue.shift();
             playNextAudio();
