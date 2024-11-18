@@ -39,10 +39,17 @@ function initializeSpeechRecognition() {
         return;
     }
 
-    speechRecognition = new SpeechRecognition();
-    speechRecognition.continuous = true;
-    speechRecognition.interimResults = false;
-    speechRecognition.lang = 'en-US';
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SpeechRecognition) {
+    alert("Your browser does not support speech recognition.");
+    return;
+}
+
+speechRecognition = new SpeechRecognition();
+speechRecognition.continuous = true;
+speechRecognition.interimResults = false;
+speechRecognition.lang = 'en-US';
+
 
     speechRecognition.onstart = () => {
         console.log("Listening...");
