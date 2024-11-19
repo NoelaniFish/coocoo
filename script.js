@@ -37,6 +37,10 @@ const keywords = {
     moan: ["board", "game", "can","do", "bath","casino", "drive", "driving", "bike", "bikes", "biking", "rode", "riding", "cars", "bus", "subways", "trains", "planes", "plane", "subway", "buses", "roads", "mix", "tattoo", "tattoos", "mukbang", "parallel play", "binge", "stream", "binging", "streaming", "race", "team", "gamble", "poker", "cards", "jack", "baths", "bathe", "bathes", "community", "mutual", "meat", "carresses", "beef", "burger", "fries", "hot dog", "hot", "cake", "brownie", "chocolate", "salmon", "chicken", "fish", "fan", "fandom", "fans", "naps", "napping", "writing", "novels", "reads", "read", "drag", "drag art", "performance", "perform", "performs", "reading", "sushi", "juice", "coffee", "matcha", "chai", "tea", "herbal", "caffeine", "caffeinated", "uncaffeinated", "over", "plane", "trip", "maxing", "trips", "spending", "spree", "vacation", "funeral", "birthday", "party", "parties", "celebrate", "woo", "hoo", "dessert", "icecream", "cream", "wait", "cuddle", "carress", "aid", "back", "zealous", "reciprocate", "reciprocation", "heaven", "gaming", "enjoy", "fun", "having", "video", "correct", "right",  "movie", "tv", "music", "dance", "art", "museum", "zoo", "date", "text", "texts", "imessage", "messages", "message", "mail", "email", "call", "calls", "calling", "texting", "communication", "talking", "speaking", "film", "instagram", "DMing", "DMs", "insta", "tiktok", "letterboxd", "facebook", "linkedin", "snapchat", "cult", "groups", "gabbing", "Talks", "pings", "says", "vegan", "be real", "omnivore", "paleo", "diet", "weight", "vegetarian", "cooking", "spicy", "baking", "making", "dance", "dances", "cooks", "companions", "domesticate", "virtual", "reality", "meta", "inclusive", "secured", "secure", "company", "safe", "warm", "mate", "monogamous", "gabs", "chats", "gossips", "gossip", "gossiping", "purrs", "purring", "V R", "caw", "caws", "coo", "coos", "purr", "poly", "polyamorous","contact",  "exercise", "gym", "rowing", "rows", "boxes", "boxing", "vr", "fencing", "stores", "seeds", "crumbs", "onions", "garlic", "smells good", "tasty", "delish", "beer", "shot", "drinking", "drunk", "wine", "craft", "crafting", "rave", "water", "sports", "soccer", "molly", "shrooms", "mushrooms", "soccer", "drugs", "weed", "lemon", "lime", "lemonade", "painting", "drawing", "crochet", "knit", "knitting", "crocheting", "gin", "tequila", "vodka", "rum", "malibu", "delicious", "cook", "bakes", "soda", "cookies", "bread", "hatch", "hatches", "shell", "sticks", "claws", "collect", "pecking", "cracks", "crack", "born", "birth", "birthing", "butter",  "baker", "artist", "artistic", "illustration", "illustrator", "musician", "composer", "scientist", "science", "chemistry", "physics", "food", "drinks", "drunk", "alcohol", "lamp", "excited", "plants", "fashion", "sewing", "tango", "salsa", "crafting", "knit", "knitting", "DJ", "happiness", "happy", "podcasts", "bonding", "bond", "pookie", "babes", "sweetums", "listening", "hearing", "darling", "honey", "bunch", "pie", "cream", "girly", "silly", "goofy", "joshing", "prank", "watch", "listen", "play"]
 };
 
+Object.values(audioFiles).forEach(audio => {
+    audio.preload = "auto";
+});
+
 // Initialize speech recognition
 function initSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window)) {
@@ -60,7 +64,7 @@ function initSpeechRecognition() {
 
         if (confidence > 0.6) {
             console.log("Transcript:", transcript);
-            processTranscript(transcript, event.results[event.results.length - 1][0].transcript.length);
+            processTranscript(transcript, transcript.length);
         }
     };
 
@@ -74,43 +78,53 @@ function initSpeechRecognition() {
         statusText.textContent = "Press and hold the spacebar to record...";
         isRecognitionActive = false;
     };
+
+    // Add event listeners for spacebar
+    document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('keyup', handleKeyup);
 }
 
-// Process the transcript and calculate duration
 function processTranscript(transcript, transcriptLength) {
-    let matchedCategory = null;
-    let matchFound = false;
-    const duration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
+    const matchedCategories = [];
+    const baseDuration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
+    const adjustedDuration = baseDuration + 2; // Add 2 seconds to playback duration
 
     // Check for keywords in each category
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => transcript.includes(word))) {
-            matchedCategory = category;
-            categoryDurations[category] = duration;
-            matchFound = true;
-            break;
+            matchedCategories.push(category);
+            categoryDurations[category] = adjustedDuration; // Update duration with buffer
         }
     }
 
-    if (!matchFound) {
-        matchedCategory = 'conversational';
-        categoryDurations.conversational = duration;
+    // If no match, default to 'conversational'
+    if (matchedCategories.length === 0) {
+        matchedCategories.push('conversational');
+        categoryDurations.conversational = adjustedDuration;
     }
 
-    console.log(`Matched Category: ${matchedCategory}, Duration: ${categoryDurations[matchedCategory]} seconds`);
-    playAudio(audioFiles[matchedCategory], categoryDurations[matchedCategory]);
+    console.log(`Matched Categories: ${matchedCategories}, Duration: ${adjustedDuration} seconds`);
+    playMultipleAudios(matchedCategories, adjustedDuration);
 }
 
-// Play audio for the calculated duration
-function playAudio(audio, duration) {
-    if (audio) {
-        const clonedAudio = audio.cloneNode();
-        clonedAudio.play();
-        setTimeout(() => {
-            clonedAudio.pause();
-            clonedAudio.currentTime = 0;
-        }, duration * 1000);
-    }
+// Play all matched audios for the given duration
+function playMultipleAudios(categories, duration) {
+    categories.forEach(category => {
+        const audio = audioFiles[category];
+        if (audio) {
+            const clonedAudio = new Audio(audio.src);  // Create new Audio object
+            clonedAudio.currentTime = 0;  // Reset to the beginning
+            clonedAudio.play().then(() => {
+                console.log(`Playing audio for category: ${category}`);
+                setTimeout(() => {
+                    clonedAudio.pause();
+                    clonedAudio.currentTime = 0; // Reset after stopping
+                }, duration * 1000);
+            }).catch(error => {
+                console.error(`Error playing audio for category ${category}:`, error);
+            });
+        }
+    });
 }
 
 // Start/Stop speech recognition on spacebar press
@@ -143,9 +157,4 @@ function stopRecognition() {
     }
 }
 
-// Initialize speech recognition and event listeners on page load
-window.onload = () => {
-    initSpeechRecognition();
-    window.addEventListener('keydown', handleKeydown);
-    window.addEventListener('keyup', handleKeyup);
-};
+initSpeechRecognition();
