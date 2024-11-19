@@ -76,7 +76,6 @@ function initSpeechRecognition() {
     };
 }
 
-// Process the transcript and calculate duration
 function processTranscript(transcript, transcriptLength) {
     const matchedCategories = [];
     const duration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
@@ -98,7 +97,6 @@ function processTranscript(transcript, transcriptLength) {
     console.log(`Matched Categories: ${matchedCategories}, Duration: ${duration} seconds`);
     playMultipleAudios(matchedCategories, duration);
 }
-
 // Play all matched audios for the given duration
 function playMultipleAudios(categories, duration) {
     categories.forEach(category => {
