@@ -47,7 +47,8 @@ function initSpeechRecognition() {
         alert("Your browser does not support speech recognition. Please use Google Chrome.");
         return;
     }
-
+document.addEventListener('keydown', handleKeydown);
+document.addEventListener('keyup', handleKeyup);
     recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
