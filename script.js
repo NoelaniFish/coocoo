@@ -165,7 +165,8 @@ function stopRecognition() {
         isRecognitionActive = false;
         statusText.textContent = "Recognition stopped. Press and hold the spacebar to record again.";
     }
-}
+}  
+
 console.log(`Matched categories for playback: ${categories}`);
 // Initialize speech recognition and event listeners on page load
 window.onload = () => {
