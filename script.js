@@ -61,7 +61,7 @@ function initSpeechRecognition() {
 
         if (confidence > 0.6) {
             console.log("Transcript:", transcript);
-            processTranscript(transcript, event.results[event.results.length - 1][0].transcript.length);
+            processTranscript(transcript, transcript.length);
         }
     };
 
@@ -77,32 +77,24 @@ function initSpeechRecognition() {
     };
 }
 
-// Process the transcript and calculate duration
+// Process the transcript and play corresponding audio
 function processTranscript(transcript, transcriptLength) {
-    let matchedCategory = null;
-    let matchFound = false;
-    const duration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
+    let matchedCategory = 'conversational'; // Default to conversational
+    const duration = Math.max(1, Math.ceil(transcriptLength / 5)); // Estimate duration based on words
 
-    // Check for keywords in each category
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => transcript.includes(word))) {
             matchedCategory = category;
-            categoryDurations[category] = duration;
-            matchFound = true;
             break;
         }
     }
 
-    if (!matchFound) {
-        matchedCategory = 'conversational';
-        categoryDurations.conversational = duration;
-    }
-
-    console.log(`Matched Category: ${matchedCategory}, Duration: ${categoryDurations[matchedCategory]} seconds`);
-    playAudio(audioFiles[matchedCategory], categoryDurations[matchedCategory]);
+    categoryDurations[matchedCategory] += duration;
+    console.log(`Matched Category: ${matchedCategory}, Duration: ${duration} seconds`);
+    playAudio(audioFiles[matchedCategory], duration);
 }
 
-// Play audio for the calculated duration
+// Play audio for the specified duration
 function playAudio(audio, duration) {
     if (audio) {
         const clonedAudio = audio.cloneNode();
@@ -114,7 +106,7 @@ function playAudio(audio, duration) {
     }
 }
 
-// Start/Stop speech recognition on spacebar press
+// Start/Stop speech recognition with the spacebar
 function handleKeydown(event) {
     if (event.code === 'Space' && !isRecognitionActive) {
         event.preventDefault();
