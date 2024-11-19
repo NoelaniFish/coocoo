@@ -78,28 +78,42 @@ function initSpeechRecognition() {
 
 // Process the transcript and calculate duration
 function processTranscript(transcript, transcriptLength) {
-    let matchedCategory = null;
-    let matchFound = false;
+    const matchedCategories = [];
     const duration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
 
     // Check for keywords in each category
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => transcript.includes(word))) {
-            matchedCategory = category;
+            matchedCategories.push(category);
             categoryDurations[category] = duration;
-            matchFound = true;
-            break;
         }
     }
 
-    if (!matchFound) {
-        matchedCategory = 'conversational';
+    // If no match, default to 'conversational'
+    if (matchedCategories.length === 0) {
+        matchedCategories.push('conversational');
         categoryDurations.conversational = duration;
     }
 
-    console.log(`Matched Category: ${matchedCategory}, Duration: ${categoryDurations[matchedCategory]} seconds`);
-    playAudio(audioFiles[matchedCategory], categoryDurations[matchedCategory]);
+    console.log(`Matched Categories: ${matchedCategories}, Duration: ${duration} seconds`);
+    playMultipleAudios(matchedCategories, duration);
 }
+
+// Play all matched audios for the given duration
+function playMultipleAudios(categories, duration) {
+    categories.forEach(category => {
+        const audio = audioFiles[category];
+        if (audio) {
+            const clonedAudio = audio.cloneNode();
+            clonedAudio.play();
+            setTimeout(() => {
+                clonedAudio.pause();
+                clonedAudio.currentTime = 0;
+            }, duration * 1000);
+        }
+    });
+}
+
 
 // Play audio for the calculated duration
 function playAudio(audio, duration) {
