@@ -1,0 +1,5 @@
+Flask==2.2.2
+Flask-Cors==3.0.10
+SpeechBrain==0.5.11
+scipy==1.11.1
+soundfile==0.12.1
