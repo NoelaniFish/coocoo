@@ -78,24 +78,25 @@ function initSpeechRecognition() {
 
 function processTranscript(transcript, transcriptLength) {
     const matchedCategories = [];
-    const duration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
+    const baseDuration = Math.max(1, Math.ceil(transcriptLength / 5)); // Calculate time based on length of spoken words
+    const adjustedDuration = baseDuration + 2; // Add 2 seconds to playback duration
 
     // Check for keywords in each category
     for (const [category, words] of Object.entries(keywords)) {
         if (words.some(word => transcript.includes(word))) {
             matchedCategories.push(category);
-            categoryDurations[category] = duration;
+            categoryDurations[category] = adjustedDuration; // Update duration with buffer
         }
     }
 
     // If no match, default to 'conversational'
     if (matchedCategories.length === 0) {
         matchedCategories.push('conversational');
-        categoryDurations.conversational = duration;
+        categoryDurations.conversational = adjustedDuration;
     }
 
-    console.log(`Matched Categories: ${matchedCategories}, Duration: ${duration} seconds`);
-    playMultipleAudios(matchedCategories, duration);
+    console.log(`Matched Categories: ${matchedCategories}, Duration: ${adjustedDuration} seconds`);
+    playMultipleAudios(matchedCategories, adjustedDuration);
 }
 // Play all matched audios for the given duration
 function playMultipleAudios(categories, duration) {
