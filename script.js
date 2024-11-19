@@ -64,7 +64,8 @@ function initSpeechRecognition() {
 
         if (confidence > 0.6) {
             console.log("Transcript:", transcript);
-            processTranscript(transcript, event.results[event.results.length - 1][0].transcript.length);
+           processTranscript(transcript, transcript.length);
+
         }
     };
 
