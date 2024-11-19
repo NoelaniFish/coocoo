@@ -105,12 +105,11 @@ function processTranscript(transcript, transcriptLength) {
 }
 // Play all matched audios for the given duration
 function playMultipleAudios(categories, duration) {
-    // Play all matched audios for the given duration
     categories.forEach(category => {
         const audio = audioFiles[category];
         if (audio) {
-            const clonedAudio = audio.cloneNode(); // Clone to avoid conflicts
-            clonedAudio.currentTime = 0; // Reset to the beginning
+            const clonedAudio = new Audio(audio.src);  // Create new Audio object
+            clonedAudio.currentTime = 0;  // Reset to the beginning
             clonedAudio.play().then(() => {
                 console.log(`Playing audio for category: ${category}`);
                 setTimeout(() => {
@@ -123,6 +122,7 @@ function playMultipleAudios(categories, duration) {
         }
     });
 }
+
 
 
 
