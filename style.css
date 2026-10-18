@@ -1,78 +1,109 @@
-/* Reset default margin and padding for all elements */
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
 }
 
-/* Set up the body with a centered layout and background color */
+html {
+    min-height: 100%;
+    background: #000;
+}
+
 body {
     margin: 0;
-    padding: 0;
-    background-image: url('pigeon.png'); /* Adjust the file path if needed */
-    background-size: cover; /* Ensures the image covers the entire background */
-    background-position: center; /* Centers the image */
-    background-repeat: no-repeat; /* Prevents the image from repeating */
-    background-attachment: fixed; /* Keeps the background fixed when scrolling */
+    min-height: 100vh;
+    min-height: 100svh;
+
     display: flex;
-    flex-direction: column; /* Arrange content vertically */
-    align-items: center; /* Center content horizontally */
-    justify-content: center; /* Center content vertically */
-    height: 100vh; /* Full viewport height */
-    background-color: #000; /* Black background */
-    font-size: 14pt; /* Text size */
-    font-family: Helvetica, sans-serif; /* Set font family */
-    text-align: center; /* Center-align all text */
-    color: #fff; /* Default text color */
-    padding: 50px; /* Add padding around content */
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background-color: #000;
+    background-image: url("pigeon.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    font-family: Helvetica, Arial, sans-serif;
+    text-align: center;
+    color: #fff;
+}
+
+main {
+    width: 100%;
+    max-width: 680px;
 }
 
 h1 {
-    margin: 0;
-    padding: 0;
-    background-image: url('pigeon.png'); /* Adjust the file path if needed */
-    background-size: cover; /* Ensures the image covers the entire background */
-    background-position: center; /* Centers the image */
-    background-repeat: no-repeat; /* Prevents the image from repeating */
-    background-attachment: fixed; /* Keeps the background fixed when scrolling */
-    display: flex;
-    flex-direction: column; /* Arrange content vertically */
-    align-items: center; /* Center content horizontally */
-    justify-content: center; /* Center content vertically */
-    height: 100vh; /* Full viewport height */
-    background-color: #000; /* Black background */
-    font-size: 36pt; /* Text size */
-    font-family: Helvetica, sans-serif; /* Set font family */
-    text-align: center; /* Center-align all text */
-    color: #fff; /* Default text color */
-    padding: 50px; /* Add padding around content */
+    margin: 0 0 28px;
+
+    /* Scales between phone and desktop sizes. */
+    font-size: clamp(2rem, 8vw, 4rem);
+    line-height: 1.05;
+    overflow-wrap: break-word;
+
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.85);
 }
 
-/* Style for the centered status message */
+#record-button {
+    max-width: 100%;
+    min-height: 56px;
+    padding: 16px 28px;
+
+    border: 2px solid #fff;
+    border-radius: 999px;
+
+    background: #fff;
+    color: #000;
+
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+#record-button[aria-pressed="true"] {
+    background: #000;
+    color: #fff;
+}
+
+#record-button:focus-visible {
+    outline: 3px solid #ffdf00;
+    outline-offset: 5px;
+}
+
+#record-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 #status {
-    font-size: 10pt; /* Text size */
-    font-style: italic; /* Italic text */
-    color: white; /* Text color */
-    margin-top: 20px; /* Space above the text */
-    background-color: #000; /* Dark background for the text */
-    padding: 10px; /* Padding around the text */
-    border-radius: 10px; /* Rounded corners */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0); /* Subtle shadow for readability */
+    width: fit-content;
+    max-width: 100%;
+    margin: 24px auto 0;
+    padding: 12px 16px;
+
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.8);
+
+    font-size: clamp(1rem, 3.5vw, 1.25rem);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
-/* Listening state styles */
-.listening {
-    background-color: black; /* Background color for listening state */
-    font-size: 18pt;
-    color: #fff; /* Text color */
-    font-style: normal;
-    font-weight: normal; /* Make text bold */
-    animation: pulse 1s infinite; /* Add a pulsing animation */
+.keyboard-hint {
+    margin-top: 16px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-shadow: 1px 1px 4px #000;
 }
 
-/* Keyframes for the pulsing effect */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
+@media (max-width: 480px) {
+    body {
+        padding: 20px;
+    }
+
+    #record-button {
+        width: 100%;
+    }
 }
