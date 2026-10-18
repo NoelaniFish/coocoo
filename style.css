@@ -49,6 +49,7 @@ h1 {
     margin: 0 0 28px;
 
     /* Scales between phone and desktop sizes. */
+    font-family: Futura, sans-serif;
     font-size: clamp(2rem, 8vw, 4rem);
     line-height: 1.05;
     overflow-wrap: break-word;
@@ -66,7 +67,7 @@ h1 {
 
     background: #fff;
     color: #000;
-
+font-family: Futura, sans-serif;
     font: inherit;
     font-weight: bold;
     cursor: pointer;
@@ -96,7 +97,7 @@ h1 {
 
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.8);
-
+    font-family: Helvetica, sans-serif;
     font-size: clamp(1rem, 3.5vw, 1.25rem);
     line-height: 1.5;
     overflow-wrap: anywhere;
