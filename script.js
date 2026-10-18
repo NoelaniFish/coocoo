@@ -20,6 +20,7 @@ const audioFiles = {
     homing: new Audio('homing.mp3'),
     aggressive: new Audio('aggressive.mp3'),
     defensive: new Audio('defensive.mp3'),
+    moan: new Audio (moan.mp3),
     mating: new Audio('mating.mp3'),
     grunt: new Audio('grunt.mp3'),
     wingwhistle: new Audio('wingwhistle.mp3'),
@@ -127,34 +128,90 @@ function playMultipleAudios(categories, duration) {
     });
 }
 
-// Start/Stop speech recognition on spacebar press
+const recordButton = document.getElementById('record-button');
+
+function updateRecordButton(active) {
+    recordButton.setAttribute('aria-pressed', String(active));
+    recordButton.textContent = active
+        ? 'Stop recording'
+        : 'Start recording';
+}
+
 function handleKeydown(event) {
-    if (event.code === 'Space' && !isRecognitionActive) {
+    // Let the button retain its normal keyboard behavior.
+    if (event.target.closest('button, input, textarea, select')) {
+        return;
+    }
+
+    if (event.code === 'Space') {
         event.preventDefault();
-        startRecognition();
+
+        if (!event.repeat && !isRecognitionActive) {
+            startRecognition();
+        }
     }
 }
 
 function handleKeyup(event) {
-    if (event.code === 'Space' && isRecognitionActive) {
+    if (event.target.closest('button, input, textarea, select')) {
+        return;
+    }
+
+    if (event.code === 'Space') {
         event.preventDefault();
         stopRecognition();
     }
 }
 
 function startRecognition() {
-    if (recognition) {
+    if (!recognition || isRecognitionActive) return;
+
+    try {
         recognition.start();
         isRecognitionActive = true;
+        updateRecordButton(true);
+        statusText.textContent = 'Starting microphone…';
+    } catch (error) {
+        isRecognitionActive = false;
+        updateRecordButton(false);
+        statusText.textContent =
+            'Could not start recording. Please try again.';
+        console.error(error);
     }
 }
 
 function stopRecognition() {
-    if (recognition && isRecognitionActive) {
-        recognition.stop();
-        isRecognitionActive = false;
-        statusText.textContent = "Recognition stopped. Press and hold the spacebar to record again.";
-    }
+    if (!recognition || !isRecognitionActive) return;
+
+    recognition.stop();
+    statusText.textContent = 'Finishing recording…';
+    // The onend handler resets the recording state.
 }
 
 initSpeechRecognition();
+
+if (recognition) {
+    recognition.onend = () => {
+        isRecognitionActive = false;
+        updateRecordButton(false);
+        statusText.textContent =
+            'Tap to start, then tap again to stop.';
+    };
+
+    recognition.onerror = (event) => {
+        statusText.textContent = `Microphone error: ${event.error}`;
+        console.error('Speech recognition error:', event.error);
+    };
+
+    recordButton.addEventListener('click', () => {
+        if (isRecognitionActive) {
+            stopRecognition();
+        } else {
+            startRecognition();
+        }
+    });
+} else {
+    recordButton.disabled = true;
+    statusText.textContent =
+        'Speech recognition is unavailable in this browser.';
+}
