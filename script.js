@@ -20,7 +20,7 @@ const audioFiles = {
     homing: new Audio('homing.mp3'),
     aggressive: new Audio('aggressive.mp3'),
     defensive: new Audio('defensive.mp3'),
-    moan: new Audio (moan.mp3),
+    moan: new Audio ('moan.mp3'),
     mating: new Audio('mating.mp3'),
     grunt: new Audio('grunt.mp3'),
     wingwhistle: new Audio('wingwhistle.mp3'),
