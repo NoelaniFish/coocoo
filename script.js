@@ -10,6 +10,7 @@ const categoryDurations = {
     defensive: 0,
     mating: 0,
     grunt: 0,
+    moan: 0,
     wingwhistle: 0,
     territorial: 0
 };
